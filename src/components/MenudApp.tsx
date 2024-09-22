@@ -1,5 +1,6 @@
-import { Button } from '@nextui-org/react';
-import WalletButton from './WalletButton';
+import SessionUser from './SessionUser';
+
+import { cookies } from 'next/headers';
 
 export default function MenudApp({
 	children,
@@ -8,9 +9,20 @@ export default function MenudApp({
 }>) {
 	const MENUS = [];
 
+	async function getUserCookieUuid(): Promise<string | undefined> {
+		'use server';
+		// Get user uuid
+		const cookieName = process.env.NEXT_PUBLIC_COOKIE;
+		if (!cookieName) return undefined;
+		return cookies().get(cookieName)?.value;
+	}
+
 	return (
-		<div className="grid grid-cols-20-90 z-20 h-screen ">
-			<div className="flex flex-col items-center justify-around self-stretch bg-black border-r-1 ">
+		<div
+			// className="grid grid-cols-20-90 z-20 h-screen "
+			className="flex items-center justify-center h-screen w-screen"
+		>
+			{/* <div className="flex flex-col items-center justify-around self-stretch bg-black border-r-1 ">
 				<div>
 					<WalletButton />
 				</div>
@@ -22,22 +34,27 @@ export default function MenudApp({
 					<div>Menu 4</div>
 					<div>Menu 5</div>
 				</div>
-			</div>
+			</div> */}
 
-			<div className="flex items-center justify-center ">
-				<div className="relative h-screen w-full ">
-					<div className="absolute h-full top-0 left-0 p-6 ">
-						<Button
-							color="primary"
-							className="font-bold pointer-events-auto"
-						>
-							n
-						</Button>
-					</div>
-
-					{children}
+			{/* <div className="flex items-center justify-center "> */}
+			<div className="relative h-screen w-full">
+				<div className="absolute h-full top-0 right-0 p-6 inline-block">
+					<SessionUser />
+					<br />
+					<p className="text-sm">
+						Session id:
+						<br />
+						<span>
+							{getUserCookieUuid() == undefined
+								? ''
+								: getUserCookieUuid()}
+						</span>
+					</p>
 				</div>
+
+				{children}
 			</div>
+			{/* </div> */}
 		</div>
 	);
 }

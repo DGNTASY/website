@@ -16,25 +16,29 @@ import BrandingHeader from './BrandingHeader';
 import { useContext } from 'react';
 import DarkModeContext from '@/app/providers';
 
-export default function Header() {
+export default function Header({
+	children,
+}: Readonly<{
+	children: React.ReactNode;
+}>) {
 	const { darkMode } = useContext(DarkModeContext);
-	const MENU_ITEMS = [
-		{
-			text: 'About',
-			href: '/about',
-		},
-		{
-			text: 'Pricing',
-			href: '/pricing',
-		},
-		{
-			text: 'Leaderboards',
-			href: '/leaderboards',
-		},
-		{
-			text: 'dApp',
-			href: '/dashboard',
-		},
+	const MENU_ITEMS: { text: string; href: string }[] = [
+		// {
+		// 	text: 'About',
+		// 	href: '/about',
+		// },
+		// {
+		// 	text: 'Pricing',
+		// 	href: '/pricing',
+		// },
+		// {
+		// 	text: 'Leaderboards',
+		// 	href: '/leaderboards',
+		// },
+		// {
+		// 	text: 'dApp',
+		// 	href: '/dashboard',
+		// },
 	];
 
 	return (
@@ -49,7 +53,7 @@ export default function Header() {
 			<NavbarItemsHeader menuItems={MENU_ITEMS} />
 
 			<NavbarContent justify="end">
-				<NavbarItem className="hidden lg:flex">
+				{/* <NavbarItem className="hidden lg:flex">
 					<Link href="/login">Login</Link>
 				</NavbarItem>
 
@@ -62,7 +66,12 @@ export default function Header() {
 					>
 						Sign Up
 					</Button>
-				</NavbarItem>
+				</NavbarItem> */}
+
+				{/* <ClientWrapper> */}
+				{/* <SessionUser /> */}
+				{/* </ClientWrapper> */}
+				{children}
 
 				<DarkLightSwitcher />
 			</NavbarContent>
