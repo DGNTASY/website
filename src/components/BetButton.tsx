@@ -16,12 +16,11 @@ type UserStatus = {
 	has_betted: boolean;
 };
 
-export default function BetButton() {
-	const [status, setStatus] = useState<UserStatus | null>(null);
+export default function BetButton({ status }: { status: UserStatus | null }) {
+	// const [status, setStatus] = useState<UserStatus | null>(null);
 	const [txnSignature, setTxnSignature] = useState('');
 	const { publicKey, sendTransaction } = useWallet();
 	const betURL = '/api/bet';
-	const statusURL = '/api/status';
 
 	async function betTransaction() {
 		if (!publicKey) {
@@ -165,31 +164,6 @@ export default function BetButton() {
 			setTxnSignature(err);
 		}
 	}
-
-	async function updateStatus() {
-		try {
-			const res = await fetch(statusURL, {
-				method: 'GET',
-			});
-
-			if (res.ok) {
-				console.log('Status received');
-				const status: UserStatus = await res.json();
-				console.log(status.score, status.has_betted);
-				setStatus(status);
-			} else {
-				console.error(
-					`Error confirming bet: ${res.status}, ${res.statusText}`,
-				);
-			}
-		} catch (error) {
-			console.error(`Error confirming bet: ${error}`);
-		}
-	}
-
-	useEffect(() => {
-		updateStatus();
-	}, []);
 
 	return (
 		<>

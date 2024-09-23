@@ -16,13 +16,15 @@ type UserStatus = {
 	has_betted: boolean;
 };
 
-export default function HandleReclaimProof() {
-	const [status, setStatus] = useState<UserStatus | null>(null);
+export default function HandleReclaimProof({
+	status,
+}: {
+	status: UserStatus | null;
+}) {
+	// const [status, setStatus] = useState<UserStatus | null>(null);
 	const [proofUrls, setProofUrls] = useState<RequestScoreSubmission | null>(
 		null,
 	);
-
-	const statusURL = '/api/status';
 
 	async function handleProofRequest() {
 		const sessionURL = '/api/score';
@@ -55,27 +57,6 @@ export default function HandleReclaimProof() {
 		await updateScore();
 	}
 
-	async function updateStatus() {
-		try {
-			const res = await fetch(statusURL, {
-				method: 'GET',
-			});
-
-			if (res.ok) {
-				console.log('Status received');
-				const status: UserStatus = await res.json();
-				console.log(status.score, status.has_betted);
-				setStatus(status);
-			} else {
-				console.error(
-					`Error confirming bet: ${res.status}, ${res.statusText}`,
-				);
-			}
-		} catch (error) {
-			console.error(`Error confirming bet: ${error}`);
-		}
-	}
-
 	function openProof() {
 		window.open(proofUrls?.requestUrl, '_blank');
 	}
@@ -85,10 +66,6 @@ export default function HandleReclaimProof() {
 			/android/i.test(userAgent) || /iPhone|iPad|iPod/i.test(userAgent)
 		);
 	}
-
-	useEffect(() => {
-		updateStatus();
-	}, []);
 
 	return (
 		<>

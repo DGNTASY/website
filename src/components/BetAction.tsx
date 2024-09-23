@@ -1,7 +1,15 @@
+'use client';
+
 import { GameWeekStatus } from './GameWeekStatus';
 
 import BetButton from './BetButton';
 import ScoreButton from './ScoreButton';
+import { useEffect, useState } from 'react';
+
+type UserStatus = {
+	score: string;
+	has_betted: boolean;
+};
 
 export default function BetAction({
 	gameweekStatus,
@@ -9,10 +17,38 @@ export default function BetAction({
 	gameweekStatus: GameWeekStatus;
 }) {
 	//
+	const [status, setStatus] = useState<UserStatus | null>(null);
+	const statusURL = '/api/status';
+
+	async function updateStatus() {
+		try {
+			const res = await fetch(statusURL, {
+				method: 'GET',
+			});
+
+			if (res.ok) {
+				console.log('Status received');
+				const status: UserStatus = await res.json();
+				console.log(status.score, status.has_betted);
+				setStatus(status);
+			} else {
+				console.error(
+					`Error confirming bet: ${res.status}, ${res.statusText}`,
+				);
+			}
+		} catch (error) {
+			console.error(`Error confirming bet: ${error}`);
+		}
+	}
+
+	useEffect(() => {
+		updateStatus();
+	}, []);
+
 	return (
 		<>
-			<BetButton />
-			<ScoreButton />
+			<BetButton status={status} />
+			<ScoreButton status={status} />
 		</>
 	);
 
