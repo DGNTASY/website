@@ -52,6 +52,7 @@ const config: Config = {
         },
         button: "#01ff86",
         theme: "#37003c",
+        connect: "#1fcdff",
       },
       borderRadius: {
         lg: "var(--radius)",
