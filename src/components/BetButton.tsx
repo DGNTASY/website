@@ -1,9 +1,15 @@
 'use client';
 
 import { Button } from '@nextui-org/react';
-import { Transaction, TransactionInstruction } from '@solana/web3.js';
+import {
+	SystemProgram,
+	Transaction,
+	TransactionInstruction,
+	PublicKey,
+} from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 
 type UserStatus = {
 	score: string;
@@ -27,12 +33,101 @@ export default function BetButton() {
 		if (!contractAddress) {
 			console.error('Failed to get contract address');
 		}
+		var caPublicKey: PublicKey;
+		try {
+			caPublicKey = new PublicKey(contractAddress!);
+		} catch (erroor) {
+			// Invalid public key
+			console.error('Failed to parse publick key');
+			return;
+		}
+
+		const contractAddressUSDC = process.env.NEXT_PUBLIC_USDC_ADDRESS;
+		if (!contractAddressUSDC) {
+			console.error('Failed to get contract address');
+		}
+		var usdcPublicKey: PublicKey;
+		try {
+			usdcPublicKey = new PublicKey(contractAddressUSDC!);
+		} catch (erroor) {
+			// Invalid public key
+			console.error('Failed to parse publick key');
+			return;
+		}
+
+		// Get accounts
+		const [escrowAccountPDA, escrowAccountBump] =
+			PublicKey.findProgramAddressSync(
+				[Buffer.from('escrow')],
+				caPublicKey,
+			);
+		const escrowAccount = {
+			pubkey: escrowAccountPDA,
+			isSigner: false,
+			isWritable: true,
+		};
+
+		const [userAccountPDA, userAccountBump] =
+			PublicKey.findProgramAddressSync(
+				[Buffer.from('escrow')],
+				caPublicKey,
+			);
+		const userAccount = {
+			pubkey: userAccountPDA,
+			isSigner: false,
+			isWritable: true,
+		};
+
+		const signer = {
+			pubkey: publicKey,
+			isSigner: true,
+			isWritable: true,
+		};
+
+		const userTokenAcc = await getAssociatedTokenAddress(
+			usdcPublicKey,
+			publicKey,
+		);
+		const userTokenAccount = {
+			pubkey: userTokenAcc,
+			isSigner: false,
+			isWritable: true,
+		};
+
+		const escrowTokenAcc = await getAssociatedTokenAddress(
+			usdcPublicKey,
+			escrowAccountPDA,
+		);
+		const escrowTokenAccount = {
+			pubkey: escrowTokenAcc,
+			isSigner: false,
+			isWritable: true,
+		};
+
+		const systemProgram = {
+			pubkey: SystemProgram.programId,
+			isSigner: false,
+			isWritable: true,
+		};
+		const tokenProgram = {
+			pubkey: TOKEN_PROGRAM_ID,
+			isSigner: false,
+			isWritable: false,
+		};
 
 		try {
 			// Create transaction
 			const transaction = new Transaction().add(
 				new TransactionInstruction({
-					keys: [],
+					keys: [
+						escrowAccount, // Escrow Account
+						userAccount, // User account
+						signer, // signer
+						userTokenAccount, // user token account
+						escrowTokenAccount, // escrow token account
+						systemProgram,
+						tokenProgram,
+					],
 					programId: publicKey,
 					// data:
 				}),

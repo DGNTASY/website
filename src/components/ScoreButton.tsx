@@ -3,6 +3,7 @@
 import { Button } from '@nextui-org/react';
 
 import { useEffect, useState } from 'react';
+import QRCode from 'react-qr-code';
 
 interface RequestScoreSubmission {
 	requestUrl: string;
@@ -79,6 +80,12 @@ export default function HandleReclaimProof() {
 		window.open(proofUrls?.requestUrl, '_blank');
 	}
 
+	function isMobile(userAgent: string): boolean {
+		return (
+			/android/i.test(userAgent) || /iPhone|iPad|iPod/i.test(userAgent)
+		);
+	}
+
 	useEffect(() => {
 		updateStatus();
 	}, []);
@@ -110,13 +117,21 @@ export default function HandleReclaimProof() {
 				{proofUrls ? (
 					<>
 						<div className="flex items-center justify-center flex-col gap-3">
-							<Button
-								color="primary"
-								className="text-white font-bold"
-								onClick={openProof}
-							>
-								Prove
-							</Button>
+							{/* Make qr code if a website - Make link if phone */}
+							{isMobile(
+								navigator.userAgent || navigator.vendor,
+							) ? (
+								<Button
+									color="primary"
+									className="text-white font-bold"
+									onClick={openProof}
+								>
+									Prove
+								</Button>
+							) : (
+								<QRCode value={proofUrls.requestUrl} />
+							)}
+
 							<p>Status: {proofUrls.statusUrl}</p>
 						</div>
 					</>

@@ -2,73 +2,89 @@
 
 import { PublicKey } from '@solana/web3.js';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useEffect, useState } from 'react';
+import { u8, struct } from '@solana/buffer-layout';
+import { publicKey, u64, bool } from '@solana/buffer-layout-utils';
+
+const USER_ACCOUNT_LAYOUT = struct([
+	publicKey('owner'),
+	bool('is_eligible'),
+	u64('payout_amount'),
+	u8('bump'),
+]);
+
+type UserAccount = {
+	owner: PublicKey;
+	is_eligible: boolean;
+	payout_amount: bigint;
+	bump: number;
+};
 
 export default async function WithdrawStatus() {
-	const { publicKey, signTransaction } = useWallet();
+	const { publicKey } = useWallet();
+	const [withdrawableBalance, setWithdrawableBalance] = useState<
+		string | null
+	>(null);
 
-	async function getWithdrawableBalance(): Promise<bigint | null> {
+	async function getWithdrawableBalance(): Promise<string | null> {
 		const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 		if (!contractAddress) {
 			return null;
 		}
 
-		return null;
-
 		// Add txn fetch
+		if (!publicKey) {
+			console.error('Wallet not connected');
+			return null;
+		}
 
-		// const PROGRAM_ID = new PublicKey(contractAddress);
-		// const seedsPDA = [Buffer.from('')];
-		// const [pdaPublicKey, bumpSeed] = PublicKey.findProgramAddressSync(
-		// 	seedsPDA,
-		// 	PROGRAM_ID,
-		// );
+		const PROGRAM_ID = new PublicKey(contractAddress!);
+		const seedsPDA = [Buffer.from('user'), publicKey.toBuffer()];
+		const [publicKeyPDA, bumpSeed] = PublicKey.findProgramAddressSync(
+			seedsPDA,
+			PROGRAM_ID,
+		);
 
-		// const { connection } = useConnection();
-		// // lusterApiUrl('mainnet-beta')
+		const { connection } = useConnection();
 
-		// if (!publicKey) {
-		// 	console.error('Wallet not connected');
-		// 	return null;
-		// }
+		try {
+			const accInfo = await connection.getAccountInfo(publicKeyPDA);
 
-		// try {
-		// 	const accountInfo = await connection.getAccountInfo(pdaPublicKey);
+			if (!accInfo || !accInfo.data) {
+				return null;
+			}
 
-		// 	if (!accountInfo || !accountInfo.data) {
-		// 		return null;
-		// 	}
+			const desUserAccount = USER_ACCOUNT_LAYOUT.decode(
+				accInfo.data,
+			) as UserAccount;
 
-		// 	const data = accountInfo.data;
-		// 	const dataView = new DataView(data.buffer);
+			if (!desUserAccount.is_eligible) {
+				return null;
+			}
 
-		// 	const authorityPublicKey = new PublicKey(data.slice(0, 32));
-
-		// 	const balance = dataView.getBigUint64(32, true);
-
-		// 	console.log('Authority Public Key:', authorityPublicKey.toBase58());
-		// 	console.log('Balance:', balance.toString());
-
-		// 	return balance;
-		// } catch (error) {
-		// 	console.error('Failed to fetch balance:', error);
-		// 	return null;
-		// }
+			// Add correct scaling of value
+			return desUserAccount.payout_amount.toString();
+		} catch (error) {
+			console.error('Failed to fetch balance:', error);
+			return null;
+		}
 	}
 
-	// useState(() => {
-	// 	// update it here
-	// }, []);
-
-	// const balance = await getWithdrawableBalance();
-	// do your formatting
-	const balanceString = '';
+	useEffect(() => {
+		// update it here
+		async function updateWithdrawableBalance() {
+			var balance = await getWithdrawableBalance();
+			setWithdrawableBalance(balance);
+		}
+		updateWithdrawableBalance();
+	}, []);
 
 	return (
 		<>
-			{balanceString == '' ? (
+			{withdrawableBalance == null ? (
 				<></>
 			) : (
-				<p>You have {balanceString} USDC to withdraw</p>
+				<p>You have {withdrawableBalance} USDC to withdraw</p>
 			)}
 		</>
 	);
