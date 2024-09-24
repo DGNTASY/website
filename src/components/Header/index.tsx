@@ -1,29 +1,25 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"; // Import the WalletMultiButton
+import React, { useEffect, useState } from "react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 export default function Header() {
   const pathname = usePathname();
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const MENU_ITEMS = [
-    {
-      text: "About",
-      href: "/about",
-    },
-    {
-      text: "Pricing",
-      href: "/pricing",
-    },
-    {
-      text: "Leaderboards",
-      href: "/leaderboards",
-    },
-    {
-      text: "dApp",
-      href: "/dashboard",
-    },
+    { text: "About", href: "/about" },
+    { text: "Pricing", href: "/pricing" },
+    { text: "Leaderboards", href: "/leaderboards" },
+    { text: "dApp", href: "/dashboard" },
   ];
 
   return (
@@ -34,6 +30,7 @@ export default function Header() {
           <p>SolFootball</p>
         </div>
       </Link>
+
       <div className="hidden md:flex gap-8">
         {MENU_ITEMS.map((item) => (
           <Link key={item.text} href={item.href}>
@@ -49,9 +46,9 @@ export default function Header() {
         ))}
       </div>
 
-      {/* Connect Wallet Button */}
+      {/* Ensure this button is only rendered after the client-side mount */}
       <div className="px-4 py-2 text-theme font-semibold rounded-lg">
-        <WalletMultiButton /> {/* This renders the Connect Wallet button */}
+        {isMounted && <WalletMultiButton />} {/* Conditional rendering */}
       </div>
     </div>
   );
