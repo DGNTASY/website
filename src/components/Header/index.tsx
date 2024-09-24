@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"; // Import the WalletMultiButton
 
 export default function Header() {
   const pathname = usePathname();
@@ -47,8 +48,10 @@ export default function Header() {
           </Link>
         ))}
       </div>
-      <div className=" px-4 py-2 bg-[#1fcdff] text-theme font-semibold rounded-lg">
-        Connect Wallet
+
+      {/* Connect Wallet Button */}
+      <div className="px-4 py-2 text-theme font-semibold rounded-lg">
+        <WalletMultiButton /> {/* This renders the Connect Wallet button */}
       </div>
     </div>
   );
