@@ -64,7 +64,7 @@ export default function Leaderboards() {
 
   return (
     <>
-      <div className="flex w-full justify-center items-center pt-[80px]">
+      <div className="flex w-full justify-center items-center pt-[80px] py-8">
         <div className="flex flex-col justify-center items-center container max-w-4xl">
           <Table className="w-full">
             <TableHeader>
