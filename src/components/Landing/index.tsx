@@ -1,16 +1,11 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
 import "swiper/css/pagination";
 
-import {
-  Autoplay,
-  EffectCoverflow,
-  Navigation,
-  Pagination,
-} from "swiper/modules";
+import { Autoplay, EffectCoverflow } from "swiper/modules";
 import Image from "next/image";
 
 const events = [
@@ -75,9 +70,9 @@ export default function Landing() {
         navigation={true}
         loopAdditionalSlides={1}
         loop={true}
-        className="!w-full  [&_.swiper-button-prev]:!text-white [&_.swiper-button-next]:!text-white opacity-60"
+        className="!w-full  opacity-60"
         maxBackfaceHiddenSlides={32}
-        modules={[EffectCoverflow, Autoplay, Navigation]}
+        modules={[EffectCoverflow, Autoplay]}
       >
         {events.map((event, index) => (
           <SwiperSlide
