@@ -23,7 +23,7 @@ export default function Header() {
   ];
 
   return (
-    <div className="flex z-[40] py-4 text-white bg-[#37003c] justify-between items-center gap-8 fixed top-0 right-0 w-full font-medium px-8 backdrop-blur-lg">
+    <div className="flex z-[40] py-2 text-white bg-[#37003c] justify-between items-center gap-8 fixed top-0 right-0 w-full font-medium px-8 backdrop-blur-lg">
       <Link href={"/"}>
         <div className="flex justify-center items-center">
           <Image src={"/solfootball.svg"} alt="logo" width={40} height={40} />
@@ -47,7 +47,7 @@ export default function Header() {
       </div>
 
       {/* Ensure this button is only rendered after the client-side mount */}
-      <div className="px-4 py-2 text-theme font-semibold rounded-lg">
+      <div className="px-4 text-theme font-semibold rounded-lg">
         {isMounted && <WalletMultiButton />} {/* Conditional rendering */}
       </div>
     </div>
