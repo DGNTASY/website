@@ -19,7 +19,7 @@ export default function Header() {
     { text: "About", href: "/about" },
     { text: "Pricing", href: "/pricing" },
     { text: "Leaderboards", href: "/leaderboards" },
-    { text: "dApp", href: "/dashboard" },
+    { text: "dApp", href: "/dapp" },
   ];
 
   return (
