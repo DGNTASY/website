@@ -77,7 +77,7 @@ export default function Landing() {
         {events.map((event, index) => (
           <SwiperSlide
             key={index}
-            className="!h-[600px] !w-96 !overflow-clip !rounded-md shadow-xl bg-gray-400 flex justify-center items-center blur-[6px]"
+            className="!h-[600px] !w-96 !overflow-clip !rounded-md shadow-xl bg-gray-400 flex justify-center items-center blur-[3px]"
           >
             <Image
               src={event.src}
