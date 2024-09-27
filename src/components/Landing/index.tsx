@@ -11,42 +11,42 @@ import Image from "next/image";
 const events = [
   {
     id: "event1",
-    src: "/test2.png",
+    src: "/swiper1.jpg",
     alt: "Event 1",
   },
   {
     id: "event2",
-    src: "/test2.png",
+    src: "/swiper2.jpg",
     alt: "Event 2",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper3.jpg",
     alt: "Event 3",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper4.jpg",
     alt: "Event 3",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper5.jpg",
     alt: "Event 3",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper6.jpg",
     alt: "Event 3",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper7.jpg",
     alt: "Event 3",
   },
   {
     id: "event3",
-    src: "/test2.png",
+    src: "/swiper8.jpg",
     alt: "Event 3",
   },
 ];
@@ -60,7 +60,7 @@ export default function Landing() {
         centeredSlides={true}
         slidesPerView={"auto"}
         coverflowEffect={{
-          rotate: 20,
+          rotate: 50,
           stretch: 0,
           depth: 200,
           modifier: 1,
@@ -70,14 +70,14 @@ export default function Landing() {
         navigation={true}
         loopAdditionalSlides={1}
         loop={true}
-        className="!w-full  opacity-60"
+        className="!w-full  opacity-70 "
         maxBackfaceHiddenSlides={32}
         modules={[EffectCoverflow, Autoplay]}
       >
         {events.map((event, index) => (
           <SwiperSlide
             key={index}
-            className="!h-[600px] !w-96 !overflow-clip !rounded-md shadow-xl bg-gray-400 flex justify-center items-center"
+            className="!h-[600px] !w-96 !overflow-clip !rounded-md shadow-xl bg-gray-400 flex justify-center items-center blur-[2px]"
           >
             <Image
               src={event.src}
