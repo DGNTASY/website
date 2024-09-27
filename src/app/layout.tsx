@@ -32,10 +32,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-r from-indigo-500 to-purple-600`}
       >
-        <SolanaWalletProvider> {/* Wrap the application with the Solana Wallet provider */}
-          <div className="flex flex-col min-h-screen max-w-screen relative bg-white text-black font-sans">
+        <SolanaWalletProvider>
+          {" "}
+          {/* Wrap the application with the Solana Wallet provider */}
+          <div className="flex flex-col min-h-screen max-w-screen relative text-black font-sans">
             <Header />
 
             {/* Render the children components */}
