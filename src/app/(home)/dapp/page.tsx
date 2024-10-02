@@ -21,7 +21,7 @@ const Dapp = () => {
   return (
     <>
       <div className="min-h-screen flex flex-col gap-12 justify-center items-center bg-gradient-to-r from-fuchsia-500 to-cyan-500 relative overflow-hidden py-28 lg:py-8">
-        <div className="w-10/12 h-32 bg-white/60 text-theme flex justify-between rounded-md">
+        <div className="w-10/12 h-full bg-white/60 text-theme flex justify-between rounded-md">
           <div className="p-8">
             <p className="text-sm lg:text-lg font-semibold">Total pot</p>
             <div>
@@ -36,7 +36,7 @@ const Dapp = () => {
           </div>
         </div>
         <div className="h-full w-11/12 grid grid-cols-1 lg:grid-cols-3 gap-16 place-items-center ">
-          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg hover:scale-110">
+          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg md:hover:scale-110">
             <Image
               src="/bet.jpg"
               alt="Background Image"
@@ -60,7 +60,7 @@ const Dapp = () => {
           </div>
 
           {/* card3 */}
-          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg hover:scale-110">
+          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg md:hover:scale-110">
             <Image
               src="/score.jpg"
               alt="Background Image"
@@ -82,7 +82,7 @@ const Dapp = () => {
             </div>
           </div>
           {/* card4 */}
-          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg hover:scale-110">
+          <div className="relative w-[350px] h-[450px] overflow-hidden rounded-lg shadow-lg md:hover:scale-110">
             <Image
               src="/withdraw.avif"
               alt="Background Image"
