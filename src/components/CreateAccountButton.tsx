@@ -36,9 +36,15 @@ export default function CreateAccountButton() {
 
 		try {
 			// Sign and make transaction
-			await sendTransaction(transaction, connection);
-			updateUserStatus();
-			window.location.reload(); // bad, but use state is not working properly here
+			const sig = await sendTransaction(transaction, connection);
+			connection.onSignature(
+				sig,
+				() => {
+					updateUserStatus();
+					window.location.reload(); // bad, but use state is not working properly here
+				},
+				'confirmed',
+			);
 		} catch (error) {
 			const err = `Transaction failed: ${error}`;
 			console.error(err);

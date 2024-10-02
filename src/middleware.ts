@@ -1,9 +1,23 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+// import { Ratelimit } from '@upstash/ratelimit';
+// import { kv } from '@vercel/kv';
 
-// This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {}
+// const ratelimit = new Ratelimit({
+// 	redis: kv,
+// 	// 5 requests from the same IP in 10 seconds
+// 	limiter: Ratelimit.slidingWindow(9, '10 s'),
+// });
 
-// See "Matching Paths" below to learn more
+// Define which routes you want to rate limit
 export const config = {
-	matcher: '/:path*',
+	matcher: '/',
 };
+
+export default async function middleware(request: NextRequest) {
+	// const ip = request.ip ?? '127.0.0.1';
+	// const { success, pending, limit, reset, remaining } =
+	// 	await ratelimit.limit(ip);
+	// return success
+	// 	? NextResponse.next()
+	// 	: NextResponse.redirect(new URL('/blocked', request.url));
+}
