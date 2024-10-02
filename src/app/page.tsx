@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <div
-        className="flex flex-col items-center justify-center w-full min-h-screen 
+        className="flex flex-col items-center justify-center w-full min-h-screen bg-gradient-to-b from-theme to-purple-500
       "
       >
         <Landing />

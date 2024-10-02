@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-b from-theme to-purple-500`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
       >
         <SolanaWalletProvider>
           {" "}
