@@ -28,7 +28,7 @@ import Fulham from '/public/pl/Fulham.svg';
 import IpswichTown from '/public/pl/IpswichTown.svg';
 import LeicesterCity from '/public/pl/LeicesterCity.svg';
 import Liverpool from '/public/pl/Liverpool.svg';
-import Manchestercity from '/public/pl/Manchestercity.svg';
+import Manchestercity from '/public/pl/ManchesterCity.svg';
 import ManchesterUnited from '/public/pl/ManchesterUnited.svg';
 import NewcastleUnited from '/public/pl/NewcastleUnited.svg';
 import NottinghamForest from '/public/pl/NottinghamForest.svg';
