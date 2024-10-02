@@ -71,7 +71,7 @@ export default function Landing() {
         loopAdditionalSlides={1}
         loop={true}
         className="!w-full  opacity-70 "
-        maxBackfaceHiddenSlides={32}
+        maxBackfaceHiddenSlides={12}
         modules={[EffectCoverflow, Autoplay]}
       >
         {events.map((event, index) => (
