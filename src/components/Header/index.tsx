@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import SessionUser from "../SessionUser";
 
 export default function Header() {
   const pathname = usePathname();
@@ -48,7 +48,7 @@ export default function Header() {
 
       {/* Ensure this button is only rendered after the client-side mount */}
       <div className="px-4 text-theme font-semibold rounded-lg">
-        {isMounted && <WalletMultiButton />} {/* Conditional rendering */}
+        {isMounted && <SessionUser />} {/* Conditional rendering */}
       </div>
     </div>
   );

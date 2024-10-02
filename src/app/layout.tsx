@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
-import SolanaWalletProvider from "@/components/WalletProvider"; // Import the wallet provider
+import { Providers } from "./providers";
 
 // Load custom fonts
 const geistSans = localFont({
@@ -34,7 +34,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
       >
-        <SolanaWalletProvider>
+        <Providers>
+          {/* <SolanaWalletProvider> */}
           {" "}
           {/* Wrap the application with the Solana Wallet provider */}
           <div className="flex flex-col min-h-screen max-w-screen relative text-black font-sans">
@@ -45,7 +46,9 @@ export default function RootLayout({
 
             {/* <Footer /> */}
           </div>
-        </SolanaWalletProvider>
+        </Providers>
+
+        {/* </SolanaWalletProvider> */}
       </body>
     </html>
   );
