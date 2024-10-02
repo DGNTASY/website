@@ -50,7 +50,7 @@ export function Providers({
             console.error(`Error makingfetching status request: ${error}`);
             return null;
         }
-    }
+    }   
 
     useEffect(() => {
         const cookieName = process.env.NEXT_PUBLIC_COOKIE;

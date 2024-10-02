@@ -3,7 +3,7 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { redirect } from 'next/navigation';
 import { usePathname } from 'next/navigation';
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { UserStatusContext } from '@/app/providers';
 import { PublicKey } from '@solana/web3.js';
 import { deleteCookie } from 'cookies-next';
@@ -32,6 +32,7 @@ export default function WalletRedirect({
     const { publicKey, connected } = useWallet();
     const pathname = usePathname();
     const { updateUserStatus } = useContext(UserStatusContext);
+    const [sessionCreated, setSessionCreated] = useState(false);
 
     async function doesSessionMatchKey(publicKey: PublicKey | null) {
         try {
@@ -85,6 +86,7 @@ export default function WalletRedirect({
             if (res.ok) {
                 console.log(`Session created`);
                 updateUserStatus();
+                setSessionCreated(true);
             } else {
                 console.log(
                     `Error creating session: ${res.status}, ${res.statusText}`,
@@ -99,7 +101,7 @@ export default function WalletRedirect({
 
     // send post request to create session
     useMemo(async () => {
-        if (!hasSession) {
+        if (!hasSession && !sessionCreated) {
             createSessionWithKey(publicKey);
             return;
         }
@@ -113,9 +115,11 @@ export default function WalletRedirect({
             }
             deleteCookie(cookieName);
 
-            createSessionWithKey(publicKey);
+            if (!sessionCreated) {
+                createSessionWithKey(publicKey);
+            }
         }
-    }, [publicKey]);
+    }, [publicKey, sessionCreated]);
 
     return (
         <>
