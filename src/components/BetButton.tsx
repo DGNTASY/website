@@ -1,29 +1,29 @@
 'use client';
 
 import { Button } from '@nextui-org/react';
+import { PublicKey } from '@solana/web3.js';
 import {
-	SystemProgram,
-	Transaction,
-	TransactionInstruction,
-	PublicKey,
-} from '@solana/web3.js';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useState } from 'react';
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
+	useConnection,
+	useWallet,
+	useAnchorWallet,
+} from '@solana/wallet-adapter-react';
+import { useContext, useState } from 'react';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { solfotProgramInterface } from './utils/constants';
+import { SfFinal } from './program/sf_final';
+import { Program, AnchorProvider } from '@coral-xyz/anchor';
+import { UserStatusContext } from '@/app/providers';
 
-type UserStatus = {
-	score: string;
-	has_betted: boolean;
-};
-
-export default function BetButton({ status }: { status: UserStatus | null }) {
-	// const [status, setStatus] = useState<UserStatus | null>(null);
-	const [txnSignature, setTxnSignature] = useState('');
+export default function BetButton() {
+	const [betTxnSignature, setBetTxnSignature] = useState('');
+	const { userStatus, updateUserStatus } = useContext(UserStatusContext);
 	const { publicKey, sendTransaction } = useWallet();
+	const { connection } = useConnection();
+	const wallet = useAnchorWallet();
 	const betURL = '/api/bet';
 
 	async function betTransaction() {
-		if (!publicKey) {
+		if (!publicKey || !wallet) {
 			console.error('Wallet not connected');
 			return;
 		}
@@ -48,96 +48,44 @@ export default function BetButton({ status }: { status: UserStatus | null }) {
 		var usdcPublicKey: PublicKey;
 		try {
 			usdcPublicKey = new PublicKey(contractAddressUSDC!);
-		} catch (erroor) {
+		} catch (error) {
 			// Invalid public key
-			console.error('Failed to parse publick key');
+			console.error(`Failed to parse publick key: ${error}`);
 			return;
 		}
 
-		// Get accounts
-		const [escrowAccountPDA, escrowAccountBump] =
+		const provider = new AnchorProvider(connection, wallet);
+		const program = new Program(
+			solfotProgramInterface,
+			provider,
+		) as Program<SfFinal>;
+
+		const [escrowAccountPDA, _escrowAccountBump] =
 			PublicKey.findProgramAddressSync(
 				[Buffer.from('escrow')],
 				caPublicKey,
 			);
-		const escrowAccount = {
-			pubkey: escrowAccountPDA,
-			isSigner: false,
-			isWritable: true,
-		};
-
-		const [userAccountPDA, userAccountBump] =
-			PublicKey.findProgramAddressSync(
-				[Buffer.from('escrow')],
-				caPublicKey,
-			);
-		const userAccount = {
-			pubkey: userAccountPDA,
-			isSigner: false,
-			isWritable: true,
-		};
-
-		const signer = {
-			pubkey: publicKey,
-			isSigner: true,
-			isWritable: true,
-		};
-
 		const userTokenAcc = await getAssociatedTokenAddress(
 			usdcPublicKey,
 			publicKey,
 		);
-		const userTokenAccount = {
-			pubkey: userTokenAcc,
-			isSigner: false,
-			isWritable: true,
-		};
+		const escrowTokenAcc = (
+			await program.account.escrowAccount.fetch(escrowAccountPDA)
+		).usdcTokenAccount;
 
-		const escrowTokenAcc = await getAssociatedTokenAddress(
-			usdcPublicKey,
-			escrowAccountPDA,
-		);
-		const escrowTokenAccount = {
-			pubkey: escrowTokenAcc,
-			isSigner: false,
-			isWritable: true,
-		};
+		console.log(escrowTokenAcc);
 
-		const systemProgram = {
-			pubkey: SystemProgram.programId,
-			isSigner: false,
-			isWritable: true,
-		};
-		const tokenProgram = {
-			pubkey: TOKEN_PROGRAM_ID,
-			isSigner: false,
-			isWritable: false,
-		};
+		const transaction = await program.methods
+			.bet()
+			.accounts({
+				escrowTokenAccount: escrowTokenAcc,
+				userTokenAccount: userTokenAcc,
+			})
+			.transaction();
 
 		try {
-			// Create transaction
-			const transaction = new Transaction().add(
-				new TransactionInstruction({
-					keys: [
-						escrowAccount, // Escrow Account
-						userAccount, // User account
-						signer, // signer
-						userTokenAccount, // user token account
-						escrowTokenAccount, // escrow token account
-						systemProgram,
-						tokenProgram,
-					],
-					programId: publicKey,
-					// data:
-				}),
-			);
-
 			// Sign and make transaction
-			const connectionContext = useConnection();
-			const txn = await sendTransaction(
-				transaction,
-				connectionContext.connection,
-			);
+			const txn = await sendTransaction(transaction, connection);
 
 			// Send transaction to backend
 			try {
@@ -150,6 +98,8 @@ export default function BetButton({ status }: { status: UserStatus | null }) {
 
 				if (res.ok) {
 					console.log('Bet Confirmed');
+					setBetTxnSignature(txn);
+					updateUserStatus();
 				} else {
 					console.error(
 						`Error confirming bet: ${res.status}, ${res.statusText}`,
@@ -159,37 +109,30 @@ export default function BetButton({ status }: { status: UserStatus | null }) {
 				console.error(`Error confirming bet: ${error}`);
 			}
 		} catch (error) {
-			const err = `Transaction failed: ${error}`;
+			const err = `Bet transaction failed: ${error}`;
 			console.error(err);
-			setTxnSignature(err);
 		}
 	}
 
 	return (
 		<>
-			{status == null || status.has_betted == true ? (
-				<></>
-			) : (
-				<Button
-					color="primary"
-					className="font-extrabold text-white"
-					onClick={betTransaction}
-				>
-					Bet
-				</Button>
-			)}
+			<div className="flex items-center justify-center flex-col gap-3">
+				{userStatus?.has_betted == true ? (
+					<></>
+				) : (
+					<>
+						<Button
+							color="primary"
+							className="font-extrabold text-white"
+							onClick={betTransaction}
+						>
+							Bet
+						</Button>
+					</>
+				)}
 
-			{txnSignature != '' ? (
-				<p>Bet succesfull, txn signature: {txnSignature}</p>
-			) : (
-				<></>
-			)}
-
-			{status == null || status.has_betted == false ? (
-				<></>
-			) : (
-				<p>Already betted</p>
-			)}
+				{betTxnSignature != '' ? <p>Bet succesfull</p> : <></>}
+			</div>
 		</>
 	);
 }

@@ -41,3 +41,8 @@ body {
 .special > *::before {
 	background-color: red;
 }
+
+iframe {
+	display: none;
+	visibility: hidden;
+}

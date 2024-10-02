@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
-	console.log('\nNew Response');
+	console.log('\nNew Session Request');
 	// Parse response data
 	const { publicKeyString }: { publicKeyString: string } =
 		await request.json();
@@ -18,8 +18,6 @@ export async function POST(request: Request) {
 			status: 400,
 		});
 	}
-
-	console.log('\nPub key: ' + publicKey.toBase58());
 
 	// Read cookie name
 	const cookieName = process.env.NEXT_PUBLIC_COOKIE;
@@ -40,14 +38,10 @@ export async function POST(request: Request) {
 		});
 	}
 
-	console.log('\nCookie not defined');
-
 	// Initialize Supabase client
 	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 	const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 	const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-	console.log('\nConnected DB');
 
 	// hit db to check if user has a session
 	const { data, error } = await supabase
@@ -55,8 +49,6 @@ export async function POST(request: Request) {
 		.select('uuid')
 		.eq('PublicKey', publicKey.toBase58());
 	var uuid: string = '';
-
-	console.log('\nfetched db for uuid based on adress');
 
 	// db error
 	if (error) {
@@ -71,7 +63,7 @@ export async function POST(request: Request) {
 		uuid = data[0].uuid;
 	}
 	if (uuid != '') {
-		console.log('\nuuid catched: ' + uuid);
+		console.log('uuid catched: ' + uuid);
 		return new Response('User has an active session', {
 			status: 200,
 			headers: {
@@ -80,7 +72,6 @@ export async function POST(request: Request) {
 		});
 	}
 
-	console.log('\nGenerating new user entry');
 	// If not generate new row
 	const supabaseRes = await supabase
 		.from('Users')
@@ -96,10 +87,9 @@ export async function POST(request: Request) {
 		});
 	}
 
-	console.log('\nEntry created rutirning uuid');
-
 	// add session as cookie
 	if (supabaseRes.data && supabaseRes.data.length > 0) {
+		console.log('uuid created: ' + supabaseRes.data[0].uuid);
 		return new Response('New user session created', {
 			status: 200,
 			headers: {

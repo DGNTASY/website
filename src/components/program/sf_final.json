@@ -1,0 +1,535 @@
+{
+  "address": "HN8EewTjx7wCePJYUHEHSzP1xha9UzHT8FF12X6in4q2",
+  "metadata": {
+    "name": "sf_final",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "bet",
+      "discriminator": [
+        94,
+        203,
+        166,
+        126,
+        20,
+        243,
+        169,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "user_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_token_account",
+          "writable": true
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "user_account"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_escrow",
+      "discriminator": [
+        243,
+        160,
+        77,
+        153,
+        11,
+        92,
+        48,
+        209
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "usdc_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "usdc_token_account",
+          "type": "pubkey"
+        },
+        {
+          "name": "min_bet_amount",
+          "type": "u64"
+        },
+        {
+          "name": "decimals",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initialize_user",
+      "discriminator": [
+        111,
+        17,
+        185,
+        250,
+        60,
+        122,
+        38,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "user_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reset_gameweek",
+      "discriminator": [
+        188,
+        65,
+        7,
+        48,
+        132,
+        199,
+        39,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "escrow_account"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_eligibility",
+      "discriminator": [
+        101,
+        95,
+        132,
+        213,
+        175,
+        252,
+        123,
+        46
+      ],
+      "accounts": [
+        {
+          "name": "user_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "user_account_pubkey"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "escrow_account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "user_account_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "payout_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "user_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_token_account",
+          "writable": true
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "user_account"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "EscrowAccount",
+      "discriminator": [
+        36,
+        69,
+        48,
+        18,
+        128,
+        225,
+        125,
+        135
+      ]
+    },
+    {
+      "name": "UserAccount",
+      "discriminator": [
+        211,
+        33,
+        136,
+        16,
+        186,
+        110,
+        242,
+        127
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "CustomError",
+      "msg": "Custom error message"
+    },
+    {
+      "code": 6001,
+      "name": "AlreadyInitialized",
+      "msg": "The account has been already initialized"
+    },
+    {
+      "code": 6002,
+      "name": "NotAuthorized",
+      "msg": "Signer is not authorized to call the contract"
+    },
+    {
+      "code": 6003,
+      "name": "NotEligible",
+      "msg": "User is not eligible to withdraw"
+    },
+    {
+      "code": 6004,
+      "name": "Underflow",
+      "msg": "Underflow"
+    },
+    {
+      "code": 6005,
+      "name": "NotInitialized",
+      "msg": "Not Initialized"
+    },
+    {
+      "code": 6006,
+      "name": "NotSameLength",
+      "msg": "Not Same Length"
+    },
+    {
+      "code": 6007,
+      "name": "NoAmountToWithdraw",
+      "msg": "User doesn't have any amount to withdraw"
+    }
+  ],
+  "types": [
+    {
+      "name": "EscrowAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "min_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "pot",
+            "type": "u128"
+          },
+          {
+            "name": "usdc_balance",
+            "type": "u128"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "initialized",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "is_eligible",
+            "type": "bool"
+          },
+          {
+            "name": "payout_amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "initialized",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "SEED",
+      "type": "string",
+      "value": "\"anchor\""
+    }
+  ]
+}

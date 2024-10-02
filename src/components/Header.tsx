@@ -2,19 +2,13 @@
 
 import DarkLightSwitcher from './DarkLightSwitcher';
 
-import {
-	Navbar,
-	NavbarContent,
-	NavbarItem,
-	Link,
-	Button,
-} from '@nextui-org/react';
+import { Navbar, NavbarContent } from '@nextui-org/react';
 
 import NavbarMenuItemsHeader from './NavbarMenuItemsHeader';
 import NavbarItemsHeader from './NavbarItemsHeader';
 import BrandingHeader from './BrandingHeader';
 import { useContext } from 'react';
-import DarkModeContext from '@/app/providers';
+import { DarkModeContext } from '@/app/providers';
 
 export default function Header({
 	children,

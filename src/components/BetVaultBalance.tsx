@@ -1,46 +1,38 @@
 'use client';
 
-import { GameWeekStatus } from './GameWeekStatus';
 import { PublicKey } from '@solana/web3.js';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { useEffect, useState } from 'react';
-import { u8, struct } from '@solana/buffer-layout';
-import { publicKey, u64, u128 } from '@solana/buffer-layout-utils';
+import { useMemo, useState } from 'react';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { Program, AnchorProvider } from '@coral-xyz/anchor';
+import { SfFinal } from './program/sf_final';
+import { solfotProgramInterface } from './utils/constants';
+import Image from 'next/image';
+import LogoUSDC from '/public/icons/usdc.svg';
 
-const VAULT_ACCOUNT_LAYOUT = struct([
-	publicKey('authority'),
-	publicKey('usdc_mint'),
-	u64('total_pot_for_winners'),
-	u64('bet_amount'),
-	u128('usdc_balance'),
-	u8('bump'),
-]);
-
-type VaultAccount = {
-	authority: PublicKey;
-	usdc_mint: PublicKey;
-	total_pot_for_winners: bigint;
-	bet_amount: bigint;
-	usdc_balance: bigint;
-	bump: number;
-};
-
-export default function BetVaultBalance({
-	gameweekStatus,
-}: {
-	gameweekStatus: GameWeekStatus;
-}) {
+export default function BetVaultBalance() {
 	const [vaultBalance, setVaultBalance] = useState<string | null>(null);
+	const { connection } = useConnection();
+	const wallet = useAnchorWallet();
 
-	async function getVaultBalance(): Promise<string | null> {
-		const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-		if (!contractAddress) {
-			return null;
+	useMemo(async () => {
+		if (!wallet) {
+			return;
 		}
 
-		// Add txn fetch
-		if (!publicKey) {
-			console.error('Wallet not connected');
+		var balance = await getVaultBalance();
+		setVaultBalance(balance);
+	}, [wallet]);
+
+	async function getVaultBalance(): Promise<string | null> {
+		const provider = new AnchorProvider(connection, wallet!);
+		const program = new Program(
+			solfotProgramInterface,
+			provider,
+		) as Program<SfFinal>;
+
+		const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+		if (!contractAddress) {
 			return null;
 		}
 
@@ -50,52 +42,44 @@ export default function BetVaultBalance({
 			return null;
 		}
 
-		const seedsPDA = [Buffer.from('escrow')];
-		const [publicKeyPDA, bumpSeed] = PublicKey.findProgramAddressSync(
-			seedsPDA,
+		const [escrowPDA, _bumpSeed] = PublicKey.findProgramAddressSync(
+			[Buffer.from('escrow')],
 			PROGRAM_ID,
 		);
 
-		const { connection } = useConnection();
-
 		try {
-			const accInfo = await connection.getAccountInfo(publicKeyPDA);
+			const escrowAccountInfo =
+				await program.account.escrowAccount.fetch(escrowPDA);
 
-			if (!accInfo || !accInfo.data) {
-				return null;
-			}
+			let pot = escrowAccountInfo.pot.toNumber();
+			let decimals = escrowAccountInfo.decimals;
+			let usdcVaultBalance = pot / 10 ** decimals;
 
-			const desVaultAccount = VAULT_ACCOUNT_LAYOUT.decode(
-				accInfo.data,
-			) as VaultAccount;
-
-			// Add correct scaling of value
-			return desVaultAccount.total_pot_for_winners.toString();
+			return usdcVaultBalance.toString();
 		} catch (error) {
 			console.error('Failed to fetch balance:', error);
 			return null;
 		}
 	}
 
-	useEffect(() => {
-		// update it here
-		async function updateWithdrawableBalance() {
-			var balance = await getVaultBalance();
-			setVaultBalance(balance);
-		}
-		updateWithdrawableBalance();
-	}, []);
-
 	return (
 		<>
-			{vaultBalance == null ? (
-				<></>
-			) : (
-				<div>
-					<p>The vault has a total pot of {vaultBalance} USDDC!</p>
-					<p>Bet for a chance to win it!</p>
-				</div>
-			)}
+			<div className="flex items-center justify-center flex-col gap-6 text-xl font-semibold text-center max-w-72">
+				<p>The vault has a total pot of</p>
+
+				<p>
+					{vaultBalance == null ? 0 : vaultBalance}
+					<span className="inline-block">
+						<Image
+							src={LogoUSDC}
+							alt="USDC Coin logo"
+							className="max-w-6 translate-y-1"
+						/>
+					</span>
+				</p>
+
+				<p>Bet for a chance to win it!</p>
+			</div>
 		</>
 	);
 }

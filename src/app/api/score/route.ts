@@ -38,8 +38,35 @@ type RequestQueryData = {
 	last_request_uuid: string | null;
 };
 
+// Parameters, note oaramValues is a custom made field
+type Parameters = {
+	additionalClientOptions: any;
+	body: string;
+	geoLocation: string;
+	headers: {
+		'user-agent': string;
+	};
+	method: string;
+	paramValues: {
+		URL_PARAMS_1: string;
+		URL_PARAMS_2: string;
+		points: string;
+	};
+	responseMatches: {
+		type: string;
+		value: string;
+	}[];
+	responseRedactions: {
+		jsonPath: string;
+		regex: string;
+		xPath: String;
+	}[];
+	url: string;
+};
+
 // Return the generated proof
 export async function GET() {
+	console.log('\nNew Score Request');
 	// Read cookie name
 	const cookieName = process.env.NEXT_PUBLIC_COOKIE;
 	if (cookieName == undefined) {
@@ -91,7 +118,12 @@ export async function GET() {
 		`Request data: ${supResData.has_betted}, ${supResData.last_request_url}, ${supResData.last_request_status_url}, ${supResData.last_request_fulfilled}, ${supResData.last_request_uuid}`,
 	);
 
-	/////////// WE CAN MAKE A CHECK IF USERS HAS REALLY BETTED ////////////
+	// User has not bettd, no need to get his score
+	if (!data.has_betted) {
+		return new Response('User has not betted yet', {
+			status: 400,
+		});
+	}
 
 	if (
 		supResData.last_request_uuid != null &&
@@ -99,9 +131,6 @@ export async function GET() {
 		supResData.last_request_status_url != null &&
 		!supResData.last_request_fulfilled
 	) {
-		console.log(
-			`Request already present and not fulfilled, start manual pooling...`,
-		);
 		// Old request is still valid
 		// Start manual pooling
 		poolRequest(supResData.last_request_status_url, sessionId);
@@ -112,7 +141,6 @@ export async function GET() {
 		});
 	}
 
-	console.log('Authorized');
 	// Read Reclaim app ID, Reclaim Provider ID and Reclaim APP secret
 	const reclaimAppId = process.env.RECLAIM_APP_ID;
 	const reclainAppProviderId = process.env.RECLAIM_APP_PROVIDER_ID;
@@ -130,7 +158,6 @@ export async function GET() {
 	}
 
 	// Acttive session and with reclaim proof
-	console.log(`Creating reclaim request...`);
 	const reclaimClient = new Reclaim.ProofRequest(reclaimAppId, {
 		sessionId: reclaimSessionId,
 	});
@@ -141,11 +168,6 @@ export async function GET() {
 		false,
 		'V2Linking',
 	);
-
-	// Add redirect url
-	// await reclaimClient.setRedirectUrl('<https://example.com>') back to our website
-
-	console.log('Reclaim is ready');
 
 	// Add context
 	reclaimClient.addContext(
@@ -163,7 +185,6 @@ export async function GET() {
 		await reclaimClient.createVerificationRequest();
 
 	// Store urls to the db to cache the request
-	console.log(`Caching reclaim request...`);
 	const requestUrlSupabaseResponse = await supabase
 		.from('Users') // Replace with your table name
 		.update({
@@ -181,13 +202,12 @@ export async function GET() {
 		});
 	}
 
-	console.log('Proof url provided and sent, start pooling...');
 	// poolRequest(statusUrl);
 	reclaimClient.startSession({
 		onSuccessCallback: async (proofs) => {
-			console.log('Verification success', proofs);
+			console.log('Session received, handling proof...');
 			const successProof = await handleProof(proofs, sessionId);
-			console.log(successProof);
+			console.log(`Proof handled, result: ${successProof}`);
 		},
 		onFailureCallback: (error) => {
 			console.error('Verification failed', error);
@@ -207,12 +227,12 @@ async function handleProof(
 		return false;
 	}
 
-	const parameters = proofs[0].claimData.parameters;
-	console.log('Parameters: ' + parameters);
+	const strParameters = proofs[0].claimData.parameters;
 
 	// Parse it
+	const parameters = JSON.parse(strParameters) as Parameters;
 	// parameters to score
-	const score: number = 0;
+	const score: number = Number(parameters.paramValues.points);
 
 	// Save it in database
 	const successUpdate = await updateReclaimRequestToFulfilled(
@@ -240,12 +260,11 @@ async function updateReclaimRequestToFulfilled(
 		updateData.score = score;
 	}
 
-	const { error, status } = await supabase
+	const { error } = await supabase
 		.from('Users')
 		.update(updateData)
 		.eq('uuid', sessionId);
-
-	if (error || status != 200) {
+	if (error) {
 		// Session is not valid
 		return false;
 	}
@@ -257,11 +276,8 @@ async function poolRequest(statusUrl: string, sessionId: string) {
 	// Max Pooling Time
 	const MAX_POOLING_TIME = 15 * 60 * 1000; // 15 min in ms
 
-	console.log('Starting interval to pool request');
-
 	const intervalId = setInterval(async () => {
 		// pool response
-		console.log('Pooling request...');
 		const res = await fetch(statusUrl, {
 			method: 'GET',
 		});
@@ -273,13 +289,14 @@ async function poolRequest(statusUrl: string, sessionId: string) {
 				console.log('Session stil pending');
 				break;
 
-			case SessionStatus.SDK_RECEIVED || SessionStatus.MOBILE_RECEIVED:
+			case SessionStatus.MOBILE_SUBMITTED:
 				// Handle proof
 				console.log('Session received, handling proof...');
 				const successProof = await handleProof(
 					statusResponse.session.proofs,
 					sessionId,
 				);
+				console.log(`Proof handled, result: ${successProof}`);
 
 				// Stop interval if proof handled succesfully
 				if (successProof) {
@@ -299,13 +316,9 @@ async function poolRequest(statusUrl: string, sessionId: string) {
 				if (successUpdate) {
 					clearInterval(intervalId);
 				}
-
 				break;
 
 			default:
-				console.log(
-					`Either ${SessionStatus.MOBILE_SUBMITTED} or ${SessionStatus.SDK_STARTED}`,
-				);
 				break;
 		}
 	}, 15_000); // 15s
@@ -316,6 +329,4 @@ async function poolRequest(statusUrl: string, sessionId: string) {
 		clearInterval(intervalId);
 		console.log('Interval cleared');
 	}, MAX_POOLING_TIME);
-
-	console.log('Generated intevals');
 }

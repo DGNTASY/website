@@ -9,7 +9,7 @@ import {
 import Image from 'next/image';
 import SolFootballIcon from '/public/icons/solfootball.svg';
 import { useContext } from 'react';
-import DarkModeContext from '@/app/providers';
+import { DarkModeContext } from '@/app/providers';
 
 export default function BrandingHeader() {
 	const { darkMode } = useContext(DarkModeContext);
@@ -30,11 +30,11 @@ export default function BrandingHeader() {
 
 					{darkMode ? (
 						<p className="font-bold text-white hidden sm:block">
-							SolFootball
+							Dgntasy
 						</p>
 					) : (
 						<p className="font-bold text-black hidden sm:block">
-							SolFootball
+							Dgntasy
 						</p>
 					)}
 				</Link>

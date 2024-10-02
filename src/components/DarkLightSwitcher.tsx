@@ -4,7 +4,7 @@ import { Button } from '@nextui-org/react';
 import { useContext } from 'react';
 import { FiMoon, FiSun } from 'react-icons/fi';
 
-import DarkModeContext from '@/app/providers';
+import { DarkModeContext } from '@/app/providers';
 
 export default function DarkLightSwitcher() {
 	const { darkMode, toggleDarkMode } = useContext(DarkModeContext);

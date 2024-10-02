@@ -1,22 +1,27 @@
 'use client';
 
 import { Button } from '@nextui-org/react';
+import { PublicKey } from '@solana/web3.js';
 import {
-	PublicKey,
-	Transaction,
-	TransactionInstruction,
-} from '@solana/web3.js';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+	useAnchorWallet,
+	useConnection,
+	useWallet,
+} from '@solana/wallet-adapter-react';
 import { useState } from 'react';
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { AnchorProvider, Program } from '@coral-xyz/anchor';
+import { solfotProgramInterface } from './utils/constants';
+import { SfFinal } from './program/sf_final';
 
 export default function WithdrawButton() {
 	const [txnSignature, setTxnSignature] = useState('');
-	const { publicKey, sendTransaction } = useWallet();
+	const { sendTransaction } = useWallet();
+	const wallet = useAnchorWallet();
+	const { connection } = useConnection();
 
 	async function withdrawTransaction() {
 		// ensure wallet is there
-		if (!publicKey) {
+		if (!wallet) {
 			console.error('Wallet not connected');
 			return;
 		}
@@ -43,97 +48,45 @@ export default function WithdrawButton() {
 		}
 		var usdcPublicKey: PublicKey;
 		try {
-			usdcPublicKey = new PublicKey(contractAddress!);
+			usdcPublicKey = new PublicKey(contractAddressUSDC!);
 		} catch (erroor) {
 			// Invalid public key
 			console.error('Failed to parse USDC publick key');
 			return;
 		}
 
-		const connectionCtx = useConnection();
+		const provider = new AnchorProvider(connection, wallet);
+		const program = new Program(
+			solfotProgramInterface,
+			provider,
+		) as Program<SfFinal>;
 
 		// prepare accounts
-		const [escrowAccountPDA, escrowAccountBump] =
+		const [escrowAccountPDA, _escrowAccountBump] =
 			PublicKey.findProgramAddressSync(
 				[Buffer.from('escrow')],
 				caPublicKey,
 			);
-		const escrowAccount = {
-			pubkey: escrowAccountPDA,
-			isSigner: false,
-			isWritable: true,
-		};
 
-		const [userAccountPDA, userAccountBump] =
-			PublicKey.findProgramAddressSync(
-				[Buffer.from('user'), publicKey.toBuffer()],
-				caPublicKey,
-			);
-		const userAccount = {
-			pubkey: userAccountPDA,
-			isSigner: false,
-			isWritable: true,
-		};
-
-		const signer = {
-			pubkey: publicKey,
-			isSigner: true,
-			isWritable: true,
-		};
-
-		// Check
-		const userTokenAcc = await getAssociatedTokenAddress(
+		const userTokenAcc = getAssociatedTokenAddressSync(
 			usdcPublicKey,
-			publicKey,
+			wallet.publicKey,
 		);
-		const userTokenAccount = {
-			pubkey: userTokenAcc,
-			isSigner: false,
-			isWritable: true,
-		};
 
-		const escrowTokenAcc = await getAssociatedTokenAddress(
-			usdcPublicKey,
-			escrowAccountPDA,
-		);
-		const escrowTokenAccount = {
-			pubkey: escrowTokenAcc,
-			isSigner: false,
-			isWritable: true,
-		};
-
-		const tokenProgram = {
-			pubkey: TOKEN_PROGRAM_ID,
-			isSigner: false,
-			isWritable: false,
-		};
-
-		// Add txn fetch
+		const escrowTokenAcc = (
+			await program.account.escrowAccount.fetch(escrowAccountPDA)
+		).usdcTokenAccount;
 
 		try {
-			const txn = new Transaction().add(
-				new TransactionInstruction({
-					keys: [
-						escrowAccount, // Escrow Account
-						userAccount, // User Account
-						signer, // Signer
-						userTokenAccount, // User Token Account
-						escrowTokenAccount, // Escrow Token Account
-						tokenProgram, // Token Program
-					],
-					programId: caPublicKey,
-					// No data
-				}),
-			);
+			const transaction = await program.methods
+				.withdraw()
+				.accounts({
+					escrowTokenAccount: escrowTokenAcc,
+					userTokenAccount: userTokenAcc,
+				})
+				.transaction();
 
-			const signature = await sendTransaction(
-				txn,
-				connectionCtx.connection,
-			);
-			await connectionCtx.connection.confirmTransaction(
-				signature,
-				'confirmed',
-			);
+			const signature = await sendTransaction(transaction, connection);
 			setTxnSignature(signature);
 		} catch (error) {
 			setTxnSignature('');
@@ -152,7 +105,9 @@ export default function WithdrawButton() {
 			</Button>
 
 			{txnSignature != '' ? (
-				<p>Withdraw succesfull, txn signature: {txnSignature}</p>
+				<div>
+					<p>Withdraw succesfull</p>
+				</div>
 			) : (
 				<></>
 			)}

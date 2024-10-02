@@ -4,34 +4,32 @@ import { Divider } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useContext } from 'react';
-import { FaGithub } from 'react-icons/fa6';
-import { FaDiscord } from 'react-icons/fa6';
 import { FaTelegram } from 'react-icons/fa6';
 import { FaXTwitter } from 'react-icons/fa6';
 
 import SolFootballIcon from '/public/icons/solfootball.svg';
-import DarkModeContext from '@/app/providers';
+import { DarkModeContext } from '@/app/providers';
 
 // Should be broken into more components
 export default function Footer() {
 	const { darkMode } = useContext(DarkModeContext);
 
+	const tgLink = process.env.NEXT_PUBLIC_TELEGRAM_LINK;
+	const docsLink = process.env.NEXT_PUBLIC_DOCS_LINK;
+	const xLink = process.env.NEXT_PUBLIC_X_LINK;
+	const reclaimLink = process.env.NEXT_PUBLIC_RELCIAM_LINK;
+	if (!tgLink || !docsLink || !xLink || !reclaimLink) {
+		return <p>Error fetching links</p>;
+	}
+
 	// Icons
 	const FOOTER_ICONS = [
 		{
-			link: '/',
-			icon: FaGithub,
-		},
-		{
-			link: '/',
-			icon: FaDiscord,
-		},
-		{
-			link: '/',
+			link: tgLink,
 			icon: FaTelegram,
 		},
 		{
-			link: '/',
+			link: docsLink,
 			icon: FaXTwitter,
 		},
 	];
@@ -42,44 +40,12 @@ export default function Footer() {
 			title: 'Resources',
 			rows: [
 				{
-					link: '/',
+					link: reclaimLink,
+					name: 'Reclaim',
+				},
+				{
+					link: docsLink,
 					name: 'Documents',
-				},
-				{
-					link: '/',
-					name: 'Whitepaper',
-				},
-				{
-					link: '/',
-					name: 'Documents',
-				},
-				{
-					link: '/',
-					name: 'Whitepaper',
-				},
-				{
-					link: '/',
-					name: 'Documents',
-				},
-				{
-					link: '/',
-					name: 'Whitepaper',
-				},
-				{
-					link: '/',
-					name: 'Documents',
-				},
-				{
-					link: '/',
-					name: 'Whitepaper',
-				},
-				{
-					link: '/',
-					name: 'Documents',
-				},
-				{
-					link: '/',
-					name: 'Whitepaper',
 				},
 			],
 		},
@@ -87,25 +53,12 @@ export default function Footer() {
 			title: 'Follow Us',
 			rows: [
 				{
-					link: '/',
-					name: 'Discord',
+					link: xLink,
+					name: 'X',
 				},
 				{
-					link: '/',
-					name: 'Github',
-				},
-			],
-		},
-		{
-			title: 'Legal',
-			rows: [
-				{
-					link: '/',
-					name: 'Privacy Policy',
-				},
-				{
-					link: '/',
-					name: 'Terms & Conditions',
+					link: tgLink,
+					name: 'Telegram',
 				},
 			],
 		},
@@ -113,40 +66,11 @@ export default function Footer() {
 			title: 'Legal',
 			rows: [
 				{
-					link: '/',
+					link: '/privacy-policy',
 					name: 'Privacy Policy',
 				},
 				{
-					link: '/',
-					name: 'Terms & Conditions',
-				},
-				{
-					link: '/',
-					name: 'Privacy Policy',
-				},
-				{
-					link: '/',
-					name: 'Terms & Conditions',
-				},
-				{
-					link: '/',
-					name: 'Privacy Policy',
-				},
-				{
-					link: '/',
-					name: 'Terms & Conditions',
-				},
-			],
-		},
-		{
-			title: 'Legal',
-			rows: [
-				{
-					link: '/',
-					name: 'Privacy Policy',
-				},
-				{
-					link: '/',
+					link: '/privacy-and-conditions',
 					name: 'Terms & Conditions',
 				},
 			],
@@ -155,7 +79,7 @@ export default function Footer() {
 
 	return (
 		<footer
-			className={`p-5 sm:p-12 pb-4 ${darkMode ? 'bg-black' : 'bg-white'}`}
+			className={`p-5 sm:p-12 pb-4 border-t-1 border-gray-500 ${darkMode ? 'bg-black' : 'bg-white'}`}
 		>
 			<div className="flex flex-col items-start justify-center gap-5">
 				<div className="flex flex-col lg:flex-row justify-between items-center w-full text-black gap-4 lg:gap-2">
@@ -166,11 +90,11 @@ export default function Footer() {
 							className="min-w-9"
 						/>
 						<p className="font-extrabold text-3xl text-primary">
-							SolFootball
+							Dgntasy
 						</p>
 					</div>
 
-					<div className="grid gap-8 sm:gap-7 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+					<div className="grid gap-8 sm:gap-7 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3">
 						{FOOTER_COLUMNS.map((el, i) => (
 							<div
 								className="flex flex-col items-start justify-start"
@@ -203,7 +127,7 @@ export default function Footer() {
 					<p
 						className={`${darkMode ? 'text-slate-600' : 'text-slate-400'} order-2 sm:order-1`}
 					>
-						© 2024 SolFootball™ All Rights Reserved.
+						© 2024 Dgntasy All Rights Reserved.
 					</p>
 
 					<div className="flex items-center justify-center gap-5 order-1 sm:order-2 flex-wrap">

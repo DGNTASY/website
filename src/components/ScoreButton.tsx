@@ -1,8 +1,8 @@
 'use client';
 
+import { UserStatusContext } from '@/app/providers';
 import { Button } from '@nextui-org/react';
-
-import { useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import QRCode from 'react-qr-code';
 
 interface RequestScoreSubmission {
@@ -11,24 +11,16 @@ interface RequestScoreSubmission {
 	error?: string;
 }
 
-type UserStatus = {
-	score: string;
-	has_betted: boolean;
-};
+export default function HandleReclaimProof() {
+	const { userStatus } = useContext(UserStatusContext);
 
-export default function HandleReclaimProof({
-	status,
-}: {
-	status: UserStatus | null;
-}) {
-	// const [status, setStatus] = useState<UserStatus | null>(null);
+	const sessionURL = '/api/score';
+	const TIMEOUT_REQUEST = 10 * 60 * 1000; // 14min in ms
 	const [proofUrls, setProofUrls] = useState<RequestScoreSubmission | null>(
 		null,
 	);
 
 	async function handleProofRequest() {
-		const sessionURL = '/api/score';
-
 		const updateScore = async () => {
 			try {
 				const res = await fetch(sessionURL, {
@@ -44,6 +36,9 @@ export default function HandleReclaimProof({
 					}
 
 					setProofUrls(data);
+					setTimeout(() => {
+						setProofUrls(null);
+					}, TIMEOUT_REQUEST);
 				} else {
 					console.error(
 						`Error requesting proof submission: ${res.status}, ${res.statusText}`,
@@ -75,21 +70,8 @@ export default function HandleReclaimProof({
 					className="text-white font-bold"
 					onClick={handleProofRequest}
 				>
-					Send Score
+					{userStatus?.score ? 'Update Score' : 'Send Score'}
 				</Button>
-
-				{status == null || status.score == null ? (
-					<>
-						<p>
-							No score yet, wait for the end of the gameweek to
-							submit your score
-						</p>
-					</>
-				) : (
-					<>
-						<p>Score: {status.score}</p>
-					</>
-				)}
 
 				{proofUrls ? (
 					<>
@@ -98,18 +80,28 @@ export default function HandleReclaimProof({
 							{isMobile(
 								navigator.userAgent || navigator.vendor,
 							) ? (
-								<Button
-									color="primary"
-									className="text-white font-bold"
-									onClick={openProof}
-								>
-									Prove
-								</Button>
+								<div className="font-semibold text-center flex justify-center items-center flex-col">
+									<Button
+										color="primary"
+										className="text-white font-bold"
+										onClick={openProof}
+									>
+										Prove
+									</Button>
+									<p>
+										Refresh the page once you have submitted
+										the proof!
+									</p>
+								</div>
 							) : (
-								<QRCode value={proofUrls.requestUrl} />
+								<div className="font-semibold text-center flex justify-center items-center flex-col">
+									<QRCode value={proofUrls.requestUrl} />
+									<p>
+										Refresh the page once you have submitted
+										the proof!
+									</p>
+								</div>
 							)}
-
-							<p>Status: {proofUrls.statusUrl}</p>
 						</div>
 					</>
 				) : (
