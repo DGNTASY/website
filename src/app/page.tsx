@@ -18,7 +18,7 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <Link href={"/login"}>
               <Button
                 className="font-extrabold bg-connect text-theme hover:bg-connect hover:text-theme"
@@ -28,7 +28,7 @@ export default function Home() {
                 PLAY
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
