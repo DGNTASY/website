@@ -21,10 +21,15 @@ export default function AppWalletProvider({
 		? process.env.NEXT_PUBLIC_SOLANA_NETWORK
 		: WalletAdapterNetwork.Devnet;
 
-	const endpoint = useMemo(
-		() => clusterApiUrl(network as Cluster),
-		[network],
-	);
+	const endpoint = useMemo(() => {
+		if (network == 'devnet') {
+			return clusterApiUrl(network as Cluster);
+		} else {
+			return process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET
+				? process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET
+				: clusterApiUrl(WalletAdapterNetwork.Devnet);
+		}
+	}, [network]);
 	const wallets = useMemo(
 		() => [
 			// manually add any legacy wallet adapters here

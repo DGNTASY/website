@@ -34,9 +34,17 @@ export default function CreateAccountButton() {
 			.initializeUser()
 			.transaction();
 
+		transaction.recentBlockhash = (
+			await connection.getLatestBlockhash()
+		).blockhash;
+		transaction.feePayer = wallet.publicKey;
+
 		try {
 			// Sign and make transaction
 			const sig = await sendTransaction(transaction, connection);
+
+			console.log('Sig: ', sig);
+
 			connection.onSignature(
 				sig,
 				() => {
