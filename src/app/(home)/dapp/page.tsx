@@ -45,9 +45,9 @@ const Dapp = () => {
             <div className="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
 
             <div className="relative w-full h-full flex flex-col justify-center items-center z-20 p-6 text-white">
-              <div className="mb-4 text-lg font-bold">
+              {/* <div className="mb-4 text-lg font-bold">
                 <p>Place your bet on the SolFootball</p>
-              </div>
+              </div> */}
               <div className="flex justify-between">
                 {/* <button className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md">
                   Place Bet

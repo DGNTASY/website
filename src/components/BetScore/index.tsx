@@ -12,20 +12,20 @@ export default function BetScore() {
       <div className="flex flex-col items-center justify-center gap-8 text-center font-semibold text-xl ">
         {userStatus == null || userStatus.score == null ? (
           <>
-            <p className="max-w-64">
+            {/* <p className="max-w-64">
               No score yet, wait for the end of the gameweek to submit your
               score
-            </p>
+            </p> */}
           </>
         ) : (
           <>
-            <p>
+            {/* <p>
               Your Score:{" "}
               <span className="text-secondary">{userStatus.score}</span>
             </p>
             <p className="max-w-64">
               If it changed and you want to submit a better result update it!
-            </p>
+            </p> */}
           </>
         )}
 

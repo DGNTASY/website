@@ -98,12 +98,12 @@ export default function WithdrawButton() {
         className="bg-[#43a3fe] text-theme font-semibold rounded-md hover:bg-[#43a3fe] "
         onClick={withdrawTransaction}
       >
-        Withdraw
+        CLAIM PRIZE
       </Button>
 
       {txnSignature != "" ? (
         <div>
-          <p>Withdraw succesfull</p>
+          <p>PRIZE CLAIMED SUCCESSFULLY</p>
         </div>
       ) : (
         <></>

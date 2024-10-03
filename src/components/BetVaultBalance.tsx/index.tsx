@@ -67,7 +67,7 @@ export default function BetVaultBalance() {
     <>
       <div className="flex items-center justify-center flex-col gap-2 text-xl font-semibold text-center max-w-72">
         <p>Total pot</p>
-        <p className="flex justify-center items-center gap-2">
+        <p className="flex justify-center items-center gap-2 text-3xl">
           {vaultBalance == null ? 0 : vaultBalance}
           <span className="inline-block">
             <Image src={LogoUSDC} alt="USDC Coin logo" className="max-w-6 " />

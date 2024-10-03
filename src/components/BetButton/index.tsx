@@ -126,7 +126,7 @@ export default function BetButton({ disabled }: Props) {
             disabled={disabled}
             className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md hover:bg-[#43a3fe]"
           >
-            Place Bet
+            PLACE BET
           </Button>
         </>
       )}

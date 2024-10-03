@@ -12,23 +12,38 @@ export default function Home() {
         <Landing />
         <div className="flex flex-col items-center justify-center z-20 absolute inset-0 w-full h-full text-theme text-center pt-[80px]">
           <div className="flex flex-col justify-center items-center gap-8 ">
-            <h1 className="text-white text-7xl font-extrabold ">SolFootball</h1>
+            <h1 className="text-white text-7xl font-extrabold drop-shadow-2xl">
+              DGNTASY
+            </h1>
             <h2 className=" text-white text-3xl font-extrabold ">
-              Lets you challenge anyone in your favourite league
+              IS WHERE YOU BET ON FANTASYPREMIERLEAGUE.COM
             </h2>
           </div>
 
-          {/* <div className="mt-8">
-            <Link href={"/login"}>
-              <Button
-                className="font-extrabold bg-connect text-theme hover:bg-connect hover:text-theme"
-                size="lg"
-                color="primary"
-              >
-                PLAY
-              </Button>
-            </Link>
-          </div> */}
+          <div className="flex justify-center items-center gap-32">
+            <div className="mt-8">
+              <Link href={"/about"}>
+                <Button
+                  className="font-extrabold bg-connect text-theme hover:bg-connect hover:text-theme"
+                  size="lg"
+                  color="primary"
+                >
+                  ABOUT
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-8">
+              <Link href={"/dapp"}>
+                <Button
+                  className="font-extrabold bg-connect text-theme hover:bg-connect hover:text-theme"
+                  size="lg"
+                  color="primary"
+                >
+                  APP
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>
