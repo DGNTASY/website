@@ -12,6 +12,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Image from "next/image";
+import BetVaultBalance from "@/components/BetVaultBalance.tsx";
+import BetWithdraw from "@/components/BetWithdraw";
+import BetScore from "@/components/BetScore";
+import BetInfo from "@/components/BetInfo";
 
 const Dapp = () => {
   const { publicKey, sendTransaction } = useWallet();
@@ -23,16 +27,10 @@ const Dapp = () => {
       <div className="min-h-screen flex flex-col gap-12 justify-center items-center bg-gradient-to-r from-fuchsia-500 to-cyan-500 relative overflow-hidden py-28 lg:py-8">
         <div className="w-10/12 h-full bg-white/60 text-theme flex justify-between rounded-md">
           <div className="p-8">
-            <p className="text-sm lg:text-lg font-semibold">Total pot</p>
-            <div>
-              <p className="text-base lg:text-3xl font-bold">0.00 SOL</p>
-            </div>
+            <BetVaultBalance />
           </div>
           <div className="p-8">
-            <p className="text-sm lg:text-lg font-semibold">Total score</p>
-            <div>
-              <p className="text-base lg:text-3xl font-bold">0.00 PTS</p>
-            </div>
+            <BetInfo />
           </div>
         </div>
         <div className="h-full w-11/12 grid grid-cols-1 lg:grid-cols-3 gap-16 place-items-center ">
@@ -71,13 +69,14 @@ const Dapp = () => {
             <div className="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
 
             <div className="relative w-full h-full flex flex-col justify-center items-center z-20 p-6 text-white">
-              <div className="mb-4 text-lg font-bold">
+              {/* <div className="mb-4 text-lg font-bold">
                 <p>View your score on SolFootball</p>
-              </div>
+              </div> */}
               <div className="flex justify-between">
-                <button className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md">
+                <BetScore />
+                {/* <button className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md">
                   View Score
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -93,13 +92,14 @@ const Dapp = () => {
             <div className="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
 
             <div className="relative w-full h-full flex flex-col justify-center items-center z-20 p-6 text-white">
-              <div className="mb-4 text-lg font-bold">
+              {/* <div className="mb-4 text-lg font-bold">
                 <p>Withdraw your points</p>
-              </div>
+              </div> */}
               <div className="flex justify-between">
-                <button className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md">
+                {/* <button className="px-4 py-2 bg-[#43a3fe] text-theme font-semibold rounded-md">
                   Withdraw
-                </button>
+                </button> */}
+                <BetWithdraw />
               </div>
             </div>
           </div>

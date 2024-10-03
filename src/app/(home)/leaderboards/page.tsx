@@ -12,35 +12,21 @@ import {
 } from "@/components/ui/table";
 
 const invoices = [
-  { rank: "1", team: "Paid$250.00", gw: "234" },
-  { rank: "2", team: "Pending$150.00", gw: "98" },
-  { rank: "3", team: "Unpaid$350.00", gw: "76" },
-  { rank: "4", team: "Paid$450.00", gw: "234" },
-  { rank: "5", team: "Paid$550.00", gw: "98" },
-  { rank: "6", team: "Pending$200.00", gw: "76" },
-  { rank: "7", team: "Unpaid$300.00", gw: "234" },
-  { rank: "8", team: "Paid$400.00", gw: "98" },
-  { rank: "9", team: "Pending$500.00", gw: "234" },
-  { rank: "10", team: "Unpaid$600.00", gw: "76" },
-  { rank: "11", team: "Paid$700.00", gw: "234" },
-  { rank: "12", team: "Pending$800.00", gw: "98" },
-  { rank: "13", team: "Unpaid$900.00", gw: "76" },
-  { rank: "14", team: "Paid$1000.00", gw: "234" },
-  { rank: "15", team: "Paid$1100.00", gw: "98" },
-  { rank: "2", team: "Pending$150.00", gw: "98" },
-  { rank: "3", team: "Unpaid$350.00", gw: "76" },
-  { rank: "4", team: "Paid$450.00", gw: "234" },
-  { rank: "5", team: "Paid$550.00", gw: "98" },
-  { rank: "6", team: "Pending$200.00", gw: "76" },
-  { rank: "7", team: "Unpaid$300.00", gw: "234" },
-  { rank: "8", team: "Paid$400.00", gw: "98" },
-  { rank: "9", team: "Pending$500.00", gw: "234" },
-  { rank: "10", team: "Unpaid$600.00", gw: "76" },
-  { rank: "11", team: "Paid$700.00", gw: "234" },
-  { rank: "12", team: "Pending$800.00", gw: "98" },
-  { rank: "13", team: "Unpaid$900.00", gw: "76" },
-  { rank: "14", team: "Paid$1000.00", gw: "234" },
-  { rank: "15", team: "Paid$1100.00", gw: "98" },
+  { rank: "1", team: "John Smith", points: "67" },
+  { rank: "2", team: "Emma Johnson", points: "58" },
+  { rank: "3", team: "Liam Williams", points: "62" },
+  { rank: "4", team: "Olivia Brown", points: "75" },
+  { rank: "5", team: "Noah Jones", points: "82" },
+  { rank: "6", team: "Ava Garcia", points: "59" },
+  { rank: "7", team: "Elijah Miller", points: "53" },
+  { rank: "8", team: "Sophia Davis", points: "61" },
+  { rank: "9", team: "James Martinez", points: "56" },
+  { rank: "10", team: "Isabella Wilson", points: "45" },
+  { rank: "11", team: "William Moore", points: "48" },
+  { rank: "12", team: "Mia Taylor", points: "62" },
+  { rank: "13", team: "Benjamin Anderson", points: "42" },
+  { rank: "14", team: "Charlotte Thomas", points: "51" },
+  { rank: "15", team: "Lucas Jackson", points: "50" },
 ];
 
 export default function Leaderboards() {
@@ -81,7 +67,7 @@ export default function Leaderboards() {
                   <TableCell className="font-semibold text-[#37003c]">
                     {invoice.team}
                   </TableCell>
-                  <TableCell className="text-right">{invoice.gw}</TableCell>
+                  <TableCell className="text-right">{invoice.points}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
