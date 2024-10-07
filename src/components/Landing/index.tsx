@@ -60,18 +60,18 @@ export default function Landing() {
         centeredSlides={true}
         slidesPerView={"auto"}
         coverflowEffect={{
-          rotate: 50,
-          stretch: 0,
-          depth: 200,
+          rotate: 30,
+          stretch: 10,
+          depth: 100,
           modifier: 1,
           slideShadows: true,
         }}
         autoplay={{ delay: 1000 }}
         navigation={true}
-        loopAdditionalSlides={1}
+        loopAdditionalSlides={0}
         loop={true}
         className="!w-full  opacity-70 "
-        maxBackfaceHiddenSlides={12}
+        maxBackfaceHiddenSlides={32}
         modules={[EffectCoverflow, Autoplay]}
       >
         {events.map((event, index) => (
