@@ -1,113 +1,111 @@
-"use client";
+'use client';
 
-import { PublicKey } from "@solana/web3.js";
 import {
-  useAnchorWallet,
-  useConnection,
-  useWallet,
-} from "@solana/wallet-adapter-react";
-import { useState } from "react";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { solfotProgramInterface } from "../utils/constants";
-import { SfFinal } from "../program/sf_final";
-import { Button } from "../ui/button";
+	useAnchorWallet,
+	useConnection,
+	useWallet,
+} from '@solana/wallet-adapter-react';
+import { useState } from 'react';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import {
+	findEscrowPdaProgramId,
+	getProgramId,
+	getUSDCProgramId,
+	solfotProgramInterface,
+} from '@/utils/program';
+import { SfFinal } from '@/idl/mainnet-beta/sf_final';
+import { Button } from '../ui/button';
+import { publicInitAnchor } from '@/lib/dapp/environment';
 
-export default function WithdrawButton() {
-  const [txnSignature, setTxnSignature] = useState("");
-  const { sendTransaction } = useWallet();
-  const wallet = useAnchorWallet();
-  const { connection } = useConnection();
+interface Props {
+	disabled?: boolean;
+	amount?: number;
+}
 
-  async function withdrawTransaction() {
-    // ensure wallet is there
-    if (!wallet) {
-      console.error("Wallet not connected");
-      return;
-    }
+export default function WithdrawButton({ disabled, amount }: Props) {
+	const [txnSignature, setTxnSignature] = useState('');
+	const { sendTransaction } = useWallet();
+	const wallet = useAnchorWallet();
+	const { connection } = useConnection();
 
-    // Prepare contract public key
-    const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-    if (!contractAddress) {
-      console.error("Failed to get contract address");
-      return;
-    }
-    var caPublicKey: PublicKey;
-    try {
-      caPublicKey = new PublicKey(contractAddress!);
-    } catch (erroor) {
-      // Invalid public key
-      console.error("Failed to parse publick key");
-      return;
-    }
+	async function withdrawTransaction() {
+		if (amount == 0) {
+			return;
+		}
 
-    const contractAddressUSDC = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-    if (!contractAddressUSDC) {
-      console.error("Failed to get USDC address");
-      return;
-    }
-    var usdcPublicKey: PublicKey;
-    try {
-      usdcPublicKey = new PublicKey(contractAddressUSDC!);
-    } catch (erroor) {
-      // Invalid public key
-      console.error("Failed to parse USDC publick key");
-      return;
-    }
+		// ensure wallet is there
+		if (!wallet) {
+			console.error('Wallet not connected');
+			return;
+		}
 
-    const provider = new AnchorProvider(connection, wallet);
-    const program = new Program(
-      solfotProgramInterface,
-      provider
-    ) as Program<SfFinal>;
+		// Prepare contract public key
+		const programId = getProgramId();
+		if (!programId) {
+			console.error('Failed to get program id');
+			return;
+		}
 
-    // prepare accounts
-    const [escrowAccountPDA, _escrowAccountBump] =
-      PublicKey.findProgramAddressSync([Buffer.from("escrow")], caPublicKey);
+		const usdcProgramId = getUSDCProgramId();
+		if (!usdcProgramId) {
+			console.error('Failed to get USDC program Id');
+			return;
+		}
 
-    const userTokenAcc = getAssociatedTokenAddressSync(
-      usdcPublicKey,
-      wallet.publicKey
-    );
+		const { program } = publicInitAnchor<SfFinal>(
+			connection,
+			wallet,
+			solfotProgramInterface,
+		);
 
-    const escrowTokenAcc = (
-      await program.account.escrowAccount.fetch(escrowAccountPDA)
-    ).usdcTokenAccount;
+		// prepare accounts
+		const [escrowAccountPDA, _escrowAccountBump] =
+			findEscrowPdaProgramId(programId);
 
-    try {
-      const transaction = await program.methods
-        .withdraw()
-        .accounts({
-          escrowTokenAccount: escrowTokenAcc,
-          userTokenAccount: userTokenAcc,
-        })
-        .transaction();
+		const userTokenAcc = getAssociatedTokenAddressSync(
+			usdcProgramId,
+			wallet.publicKey,
+		);
 
-      const signature = await sendTransaction(transaction, connection);
-      setTxnSignature(signature);
-    } catch (error) {
-      setTxnSignature("");
-      console.error("Transaction failed:", error);
-    }
-  }
+		const escrowTokenAcc = (
+			await program.account.escrowAccount.fetch(escrowAccountPDA)
+		).usdcTokenAccount;
 
-  return (
-    <>
-      <Button
-        color="primary"
-        className="bg-[#43a3fe] text-theme font-semibold rounded-md hover:bg-[#43a3fe] "
-        onClick={withdrawTransaction}
-      >
-        CLAIM PRIZE
-      </Button>
+		try {
+			const transaction = await program.methods
+				.withdraw()
+				.accounts({
+					escrowTokenAccount: escrowTokenAcc,
+					userTokenAccount: userTokenAcc,
+				})
+				.transaction();
 
-      {txnSignature != "" ? (
-        <div>
-          <p>PRIZE CLAIMED SUCCESSFULLY</p>
-        </div>
-      ) : (
-        <></>
-      )}
-    </>
-  );
+			const signature = await sendTransaction(transaction, connection);
+			setTxnSignature(signature);
+		} catch (error) {
+			setTxnSignature('');
+			console.error('Transaction failed:', error);
+		}
+	}
+
+	return (
+		<>
+			<Button
+				color="primary"
+				className="bg-[#43a3fe] text-theme font-semibold rounded-md hover:bg-[#43a3fe]"
+				disabled={disabled}
+				onClick={withdrawTransaction}
+			>
+				CLAIM PRIZE
+			</Button>
+
+			{txnSignature != '' ? (
+				<div>
+					<p>PRIZE CLAIMED SUCCESSFULLY</p>
+				</div>
+			) : (
+				<></>
+			)}
+		</>
+	);
 }

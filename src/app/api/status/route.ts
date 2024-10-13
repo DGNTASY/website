@@ -1,10 +1,16 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Cluster, Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
-import { Program } from '@coral-xyz/anchor';
-import { solfotProgramInterface } from '@/components/utils/constants';
-import { SfFinal } from '@/components/program/sf_final';
+import { PublicKey } from '@solana/web3.js';
+import {
+	getUserCookie,
+	initAnchor,
+	initSolana,
+	initSupabase,
+} from '@/lib/api/environment';
+import { RequestError, handleError } from '@/lib/api/error';
+import { solfotProgramInterface } from '@/utils/program';
+import { dummyWallet } from '@/utils/wallet';
+import { Wallet } from '@coral-xyz/anchor';
+import { SfFinal } from '@/idl/mainnet-beta/sf_final';
 
 type UserStatus = {
 	score: string;
@@ -14,118 +20,115 @@ type UserStatus = {
 
 // Return the generated proof
 export async function GET() {
-	console.log('\nNew Status Request');
-	// Read cookie name
-	const cookieName = process.env.NEXT_PUBLIC_COOKIE;
-	if (cookieName == undefined) {
-		return new Response('Error evaluating request', {
-			status: 400,
-		});
-	}
-
-	// Check if user has a session
-	const cookieStore = cookies();
-	const token = cookieStore.get(cookieName);
-	if (token == undefined) {
-		// No session
-		return new Response('User doesnt have an active session', {
-			status: 400,
-		});
-	}
-	const sessionId = token.value;
-
-	// Check session is valid
-	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-	const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
-	const supabase = createClient(supabaseUrl, supabaseAnonKey);
-	const { data, error, status } = await supabase
-		.from('Users')
-		.select('PublicKey, score, has_betted')
-		.eq('uuid', sessionId)
-		.single();
-	if (data == null || error || status == 406) {
-		// Session is not valid
-		return new Response('Invalid session', {
-			status: 400,
-		});
-	}
-
-	const solanaEnv = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
-	const strProgramID = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-	if (solanaEnv == undefined || strProgramID == undefined) {
-		return new Response('Error evaluating request', {
-			status: 400,
-		});
-	}
-	const connection = new Connection(
-		clusterApiUrl(solanaEnv as Cluster),
-		'confirmed',
-	);
-
-	let userPublicKey: PublicKey;
-	let programID: PublicKey;
 	try {
-		userPublicKey = new PublicKey(data.PublicKey as string);
-		programID = new PublicKey(strProgramID as string);
-	} catch (err) {
-		return new Response('Error parsing publick key', {
-			status: 400,
-		});
-	}
+		console.log('\nNew Status Request');
 
-	let userAccount: [PublicKey, number];
-	try {
-		userAccount = PublicKey.findProgramAddressSync(
-			[Buffer.from('user'), userPublicKey.toBuffer()],
-			programID,
+		// Read cookie name
+		const sessionId = getUserCookie();
+
+		// Check session is valid
+		const supabase = initSupabase();
+
+		console.log('Environment loaded');
+		const { data, error, status } = await supabase
+			.from('Users')
+			.select('PublicKey, score, has_betted')
+			.eq('uuid', sessionId)
+			.single();
+		if (error) {
+			console.error('Error when requesting from database: ', error);
+			return handleError(
+				new RequestError('Error when fetching data from database', 500),
+			);
+		}
+		if (data == null || status == 406) {
+			// Session is not valid
+			return handleError(
+				new RequestError('Invalid session, not found', 400),
+			);
+		}
+
+		// Init web3
+		const { connection, programID } = initSolana();
+
+		let userPublicKey: PublicKey;
+		try {
+			userPublicKey = new PublicKey(data.PublicKey as string);
+		} catch (err) {
+			console.error('Error parsing user public key: ', err);
+			return handleError(
+				new RequestError('Error parsing user publick key', 400),
+			);
+		}
+
+		let userAccount: [PublicKey, number];
+		try {
+			userAccount = PublicKey.findProgramAddressSync(
+				[Buffer.from('user'), userPublicKey.toBuffer()],
+				programID,
+			);
+		} catch (err) {
+			const supResData: UserStatus = {
+				score: data.score,
+				has_betted: data.has_betted,
+				has_account: false,
+			};
+
+			console.error(
+				`Status fetched, error find program address sync ${supResData.score}, ${supResData.has_betted}`,
+			);
+
+			return NextResponse.json(supResData);
+		}
+
+		// Get program
+		const { program } = initAnchor<SfFinal>(
+			connection,
+			dummyWallet as Wallet,
+			solfotProgramInterface,
 		);
-	} catch (err) {
+
+		// Check if user has an account
+		const accountData = await program.account.userAccount.fetchNullable(
+			userAccount[0],
+		);
+
+		if (accountData === null) {
+			const supResData: UserStatus = {
+				score: data.score,
+				has_betted: data.has_betted,
+				has_account: false,
+			};
+
+			console.log(
+				`Status fetched, account data is null, ${supResData.score}, ${supResData.has_betted}`,
+			);
+
+			return NextResponse.json(supResData);
+		}
+
 		const supResData: UserStatus = {
 			score: data.score,
 			has_betted: data.has_betted,
-			has_account: false,
+			has_account: true,
 		};
 
 		console.log(
-			`Status fetched, error find program address sync ${supResData.score}, ${supResData.has_betted}`,
+			`Status fetched, owns a user account, ${supResData.score}, ${supResData.has_betted}`,
 		);
 
 		return NextResponse.json(supResData);
+	} catch (errResponse) {
+		if (errResponse instanceof Response) {
+			console.error(`Unhandled error: ${errResponse}`);
+			return new Response(
+				JSON.stringify({ message: 'Unhandled error' }),
+				{
+					status: 500,
+				},
+			);
+		}
+
+		return errResponse;
 	}
-
-	// const provider = new AnchorProvider(connection, null, {});
-	const program = new Program(solfotProgramInterface, {
-		connection,
-	}) as Program<SfFinal>;
-
-	// Check if user has an account
-	const accountData = await program.account.userAccount.fetchNullable(
-		userAccount[0],
-	);
-
-	if (accountData === null) {
-		const supResData: UserStatus = {
-			score: data.score,
-			has_betted: data.has_betted,
-			has_account: false,
-		};
-
-		console.log(
-			`Status fetched, account data is null, ${supResData.score}, ${supResData.has_betted}`,
-		);
-
-		return NextResponse.json(supResData);
-	}
-
-	const supResData: UserStatus = {
-		score: data.score,
-		has_betted: data.has_betted,
-		has_account: true,
-	};
-
-	console.log(
-		`Status fetched, owns a user account, ${supResData.score}, ${supResData.has_betted}`,
-	);
-
-	return NextResponse.json(supResData);
 }

@@ -7,10 +7,10 @@ import {
 } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
+import { Cluster, clusterApiUrl } from '@solana/web3.js';
 // import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
 
-// Default styles that can be overridden by your app
+// Default styles
 require('@solana/wallet-adapter-react-ui/styles.css');
 
 export default function AppWalletProvider({
@@ -18,9 +18,23 @@ export default function AppWalletProvider({
 }: {
 	children: React.ReactNode;
 }) {
-	const network = WalletAdapterNetwork.Devnet;
+	// Check environment for chain
+	const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK
+		? process.env.NEXT_PUBLIC_SOLANA_NETWORK
+		: WalletAdapterNetwork.Devnet;
 
-	const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+	// Select correct endpoint
+	const endpoint = useMemo(() => {
+		if (network == 'devnet') {
+			return clusterApiUrl(network as Cluster);
+		} else {
+			// If fails to load NEXT_PUBLIC_SOLANA_RPC_MAINNET set cluster api devnet rpc
+			return process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET
+				? process.env.NEXT_PUBLIC_SOLANA_RPC_MAINNET
+				: clusterApiUrl(WalletAdapterNetwork.Devnet);
+		}
+	}, [network]);
+
 	const wallets = useMemo(
 		() => [
 			// manually add any legacy wallet adapters here

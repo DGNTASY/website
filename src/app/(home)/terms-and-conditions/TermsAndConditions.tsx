@@ -1,10 +1,7 @@
 'use client';
 
-import { DarkModeContext } from '@/app/providers';
-import { useContext } from 'react';
-
 export default function TermsAndConditions() {
-	const { darkMode } = useContext(DarkModeContext);
+	const darkMode = false;
 
 	const TERMS_AND_CONDITIONS_LI = [
 		{

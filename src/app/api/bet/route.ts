@@ -1,22 +1,17 @@
-import { cookies } from 'next/headers';
-import {
-	PublicKey,
-	Connection,
-	clusterApiUrl,
-	Cluster,
-	Keypair,
-} from '@solana/web3.js';
-import { createClient } from '@supabase/supabase-js';
+import { PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { AnchorProvider, Program } from '@coral-xyz/anchor';
-import { SfFinal } from '@/components/program/sf_final';
-import { solfotProgramInterface } from '@/components/utils/constants';
+import { Wallet } from '@coral-xyz/anchor';
 
-const dummyWallet = {
-	publicKey: Keypair.generate().publicKey, // Just a dummy public key
-	signTransaction: async (tx: any) => tx, // No-op for signing
-	signAllTransactions: async (txs: any) => txs, // No-op for signing multiple
-};
+import { SfFinal } from '@/idl/mainnet-beta/sf_final';
+import { solfotProgramInterface } from '@/utils/program';
+import {
+	getUserCookie,
+	initAnchor,
+	initSolana,
+	initSupabase,
+} from '@/lib/api/environment';
+import { RequestError, handleError } from '@/lib/api/error';
+import { dummyWallet } from '@/utils/wallet';
 
 /**
  * User bets so:
@@ -27,213 +22,225 @@ const dummyWallet = {
  * 5. Transaction Confirmation and Verification
  */
 export async function POST(request: Request) {
-	console.log('\nNew Bet Request');
-	// Parse response data
-	const { transactionHash }: { transactionHash: string } =
-		await request.json();
-
-	// Read cookie name
-	const cookieName = process.env.NEXT_PUBLIC_COOKIE;
-	if (cookieName == undefined) {
-		return new Response('Error evaluating request', {
-			status: 400,
-		});
-	}
-
-	// Check ifuser has a session
-	const cookieStore = cookies();
-	const token = cookieStore.get(cookieName);
-	if (token == undefined) {
-		return new Response('User has no session', {
-			status: 400,
-		});
-	}
-	const sessionId = token.value;
-
-	const strProgramId = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-	const strUsdcProgramId = process.env.NEXT_PUBLIC_USDC_ADDRESS;
-	var programID: PublicKey;
-	var usdcProgramID: PublicKey;
 	try {
-		if (!strProgramId || !strUsdcProgramId) {
-			throw new Error();
-		}
+		console.log('\nNew Bet Request');
 
-		programID = new PublicKey(strProgramId);
-		usdcProgramID = new PublicKey(strUsdcProgramId);
-	} catch (error) {
-		return new Response(`Error evaluating request`, {
-			status: 400,
-		});
-	}
+		// Parse response data
+		const { transactionHash }: { transactionHash: string } =
+			await request.json();
 
-	const solanaEnv = process.env.NEXT_PUBLIC_SOLANA_NETWORK;
-	if (solanaEnv == undefined) {
-		return new Response('Error evaluating request', {
-			status: 400,
-		});
-	}
-	const connection = new Connection(
-		clusterApiUrl(solanaEnv as Cluster),
-		'confirmed',
-	);
+		// Get session cookie
+		const sessionId = getUserCookie();
 
-	console.log('\nEverything has been loaded');
+		// Get web3
+		const { connection, programID, usdcProgramID } = initSolana();
 
-	console.log(transactionHash);
-	var txnDetails = await connection.getTransaction(transactionHash);
-	console.log(txnDetails);
-	if (!txnDetails) {
-		try {
-			// wait for txn
-			await connection.confirmTransaction(transactionHash, 'confirmed');
-			// get txn
-			txnDetails = await connection.getTransaction(transactionHash);
+		console.log('Everything has been loaded');
 
-			if (txnDetails) {
-				console.log('Transaction details:', txnDetails);
-			} else {
-				return new Response('Error waiting for user txn', {
-					status: 400,
-				});
+		// Check that transaction is completed
+		var txnDetails = await connection.getTransaction(transactionHash);
+		if (!txnDetails) {
+			try {
+				// wait for txn
+				await connection.confirmTransaction(
+					transactionHash,
+					'confirmed',
+				);
+				// get txn
+				txnDetails = await connection.getTransaction(transactionHash);
+
+				if (!txnDetails) {
+					return handleError(
+						new RequestError(
+							'Waiting for user transaction returned an error',
+							400,
+						),
+					);
+				}
+			} catch (error) {
+				console.error(
+					`Error during wait for user transaction ${error}`,
+				);
+				return handleError(
+					new RequestError(
+						'Error during wait for user transaction',
+						500,
+					),
+				);
 			}
-		} catch (error) {
-			return new Response('Error waiting for user txn', {
-				status: 400,
-			});
 		}
-	}
 
-	console.log('\nTxn is done');
+		console.log('\nTxn is done');
 
-	const time = txnDetails.blockTime;
-	const currentTime = await connection.getBlockTime(
-		await connection.getSlot(),
-	);
-	console.log(time, currentTime);
-	if (!time || !currentTime || currentTime > time + 60 * 5) {
-		return new Response('Time is too old or unacessible', {
-			status: 400,
-		});
-	}
-
-	console.log('\nTxn is not too old');
-
-	const publicKey = txnDetails.transaction.message.accountKeys[0];
-
-	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-	const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
-	const supabase = createClient(supabaseUrl, supabaseAnonKey);
-	console.log('\nConnected DB');
-
-	// hit db to check if user has a session
-	console.log(
-		'\nChecking that user id and wallet are the by selecting the row',
-	);
-	const { data, error } = await supabase
-		.from('Users')
-		.select('*')
-		.eq('PublicKey', publicKey.toBase58())
-		.eq('uuid', sessionId)
-		.single();
-	if (data == null || error) {
-		return new Response('User has already an active session', {
-			status: 400,
-		});
-	}
-
-	console.log('\nCorrect signer');
-
-	const provider = new AnchorProvider(connection, dummyWallet, {
-		preflightCommitment: 'processed',
-	});
-	const program = new Program<SfFinal>(
-		solfotProgramInterface,
-		provider,
-	) as Program<SfFinal>;
-
-	// Check that there are: escrow account, user and escrow token account
-	var escrowTokenAccount: PublicKey;
-	var userTokenAccount: PublicKey;
-	var [escrowAccount, _escrowAccountBump] = PublicKey.findProgramAddressSync(
-		[Buffer.from('escrow')],
-		programID,
-	);
-	try {
-		console.log('usdc prog id: ', usdcProgramID);
-		console.log('pub key: ', publicKey);
-
-		userTokenAccount = getAssociatedTokenAddressSync(
-			usdcProgramID,
-			publicKey,
+		// Check that transaction is not too old
+		const time = txnDetails.blockTime;
+		if (!time) {
+			return handleError(
+				new RequestError('Transaction time is unacessible', 500),
+			);
+		}
+		const currentTime = await connection.getBlockTime(
+			await connection.getSlot(),
 		);
-		escrowTokenAccount = (
-			await program.account.escrowAccount.fetch(escrowAccount)
-		).usdcTokenAccount;
+		if (!currentTime) {
+			return handleError(
+				new RequestError('Current time is unacessible', 500),
+			);
+		}
+		const maxDelay = 60 * 5; // 5 minutes in s
+		if (currentTime > time + maxDelay) {
+			return handleError(new RequestError('Time is too old', 400));
+		}
 
-		console.log('User token account: ', userTokenAccount.toBase58());
-		console.log('Escrow token account: ', escrowAccount.toBase58());
-	} catch (error) {
-		console.log(error);
-		return new Response('Error generating token accounts', {
-			status: 400,
-		});
-	}
+		console.log('\nTxn is not too old');
 
-	console.log('\nChecking account keys');
+		const supabase = initSupabase();
 
-	const accountKeys = txnDetails.transaction.message.staticAccountKeys;
-	const accountKeysToMatch = [
-		escrowTokenAccount,
-		userTokenAccount,
-		escrowAccount,
-	];
+		console.log('\nConnected DB');
 
-	console.log(accountKeys, accountKeysToMatch);
+		// hit db to check if user has a session
+		const publicKey = txnDetails.transaction.message.accountKeys[0];
+		const { data, error } = await supabase
+			.from('Users')
+			.select('*')
+			.eq('PublicKey', publicKey.toBase58())
+			.eq('uuid', sessionId)
+			.single();
+		if (error) {
+			console.log('Error validating user session: ', error);
+			return handleError(
+				new RequestError('Error validating user session', 500),
+			);
+		}
+		if (data == null) {
+			return handleError(
+				new RequestError(
+					"Either session is not valid or user doesn't have a session",
+					400,
+				),
+			);
+		}
 
-	var correctTxn = true;
-	for (let i = 0; i < accountKeysToMatch.length; i++) {
-		// can be optimized
-		let accKey = accountKeysToMatch[i];
+		console.log('\nCorrect signer');
 
-		let present = false;
-		for (let j = 0; j < accountKeys.length; j++) {
-			if (accKey.toBase58() == accountKeys[j].toBase58()) {
-				present = true;
+		// Init Anchor
+		const { program } = initAnchor<SfFinal>(
+			connection,
+			dummyWallet as Wallet,
+			solfotProgramInterface,
+		);
+
+		// Check that there exist: escrow account, user and escrow token account
+		var escrowTokenAccount: PublicKey;
+		var userTokenAccount: PublicKey;
+		var [escrowAccount, _escrowAccountBump] =
+			PublicKey.findProgramAddressSync(
+				[Buffer.from('escrow')],
+				programID,
+			);
+		try {
+			userTokenAccount = getAssociatedTokenAddressSync(
+				usdcProgramID,
+				publicKey,
+			);
+			escrowTokenAccount = (
+				await program.account.escrowAccount.fetch(escrowAccount)
+			).usdcTokenAccount;
+		} catch (error) {
+			console.error(
+				`Error generating user and escrow token accounts ${error}`,
+			);
+			return handleError(
+				new RequestError(
+					'Error generating user and escrow token accounts',
+					500,
+				),
+			);
+		}
+
+		console.log('\nChecking account keys');
+
+		// We look that in the transaction all account keys match
+		const accountKeys = txnDetails.transaction.message.staticAccountKeys;
+		const accountKeysToMatch = [
+			escrowTokenAccount,
+			userTokenAccount,
+			escrowAccount,
+		];
+		var correctTxn = true;
+		for (let i = 0; i < accountKeysToMatch.length; i++) {
+			// can be optimized
+			let accKey = accountKeysToMatch[i];
+
+			let present = false;
+			for (let j = 0; j < accountKeys.length; j++) {
+				if (accKey.toBase58() == accountKeys[j].toBase58()) {
+					present = true;
+					continue;
+				}
+			}
+
+			if (present) {
 				continue;
 			}
+
+			correctTxn = false;
+		}
+		if (!correctTxn) {
+			return handleError(
+				new RequestError('Wrong transaction passed in', 500),
+			);
 		}
 
-		if (present) {
-			continue;
+		console.log(
+			'\nThe transaction and the wallet is correct, setting its bet status',
+		);
+
+		const { error: errorUpdate, status } = await supabase
+			.from('Users')
+			.update({
+				has_betted: true,
+			})
+			.eq('PublicKey', publicKey.toBase58())
+			.eq('uuid', sessionId);
+
+		if (errorUpdate) {
+			console.error(
+				`Error while updating the user bet status: ${errorUpdate}`,
+			);
+			return handleError(
+				new RequestError(
+					'Error while updating the user bet status',
+					400,
+				),
+			);
+		}
+		if (status == 406) {
+			return handleError(
+				new RequestError('Update was not accepted', status),
+			);
 		}
 
-		correctTxn = false;
-	}
-	if (!correctTxn) {
-		return new Response('Wrong transaction passed in', {
-			status: 400,
-		});
-	}
+		return new Response(
+			JSON.stringify({ message: 'User bet has been updated' }),
+			{
+				status: 200,
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			},
+		);
+	} catch (errResponse) {
+		if (errResponse instanceof Response) {
+			console.error(`Unhandled error: ${errResponse}`);
+			return new Response(
+				JSON.stringify({ message: 'Unhandled error' }),
+				{
+					status: 500,
+				},
+			);
+		}
 
-	console.log(
-		'\nThe transaction and the wallet is correct, setting its bet status',
-	);
-
-	const { error: errorUpdate, status } = await supabase
-		.from('Users')
-		.update({
-			has_betted: true,
-		})
-		.eq('PublicKey', publicKey.toBase58())
-		.eq('uuid', sessionId);
-	if (errorUpdate || status == 406) {
-		return new Response('Error updating the ', {
-			status: 400,
-		});
+		return errResponse;
 	}
-
-	return new Response('User bet updated', {
-		status: 200,
-	});
 }
