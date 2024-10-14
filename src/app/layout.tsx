@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import { Providers } from './providers';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Footer from '@/components/Footer';
 
 const geistSans = localFont({
 	src: './fonts/GeistVF.woff',
@@ -34,13 +35,12 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
 			>
 				<Providers>
-					<div className="flex flex-col min-h-screen max-w-screen relative text-black font-sans">
+					<div className="flex flex-col min-h-screen max-w-screen  text-black font-sans">
 						<Header />
 						{children}
+						<Footer />
 					</div>
 				</Providers>
-
-				{/* Vercel Website Analytics */}
 				<Analytics />
 				<SpeedInsights />
 			</body>
